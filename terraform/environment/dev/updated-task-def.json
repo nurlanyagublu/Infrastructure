@@ -1,0 +1,89 @@
+{
+  "family": "nurlan-yagublu-dev-flask-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task-execution",
+  "taskRoleArn": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task",
+  "containerDefinitions": [
+    {
+      "name": "flask-api",
+      "image": "253650698585.dkr.ecr.us-east-1.amazonaws.com/nurlan-yagublu-dev-flask-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "ENV",
+          "value": "dev"
+        },
+        {
+          "name": "PORT",
+          "value": "8080"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "us-east-1"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:password::"
+        },
+        {
+          "name": "POSTGRES_USER",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:username::"
+        },
+        {
+          "name": "POSTGRES_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:host::"
+        },
+        {
+          "name": "POSTGRES_DB",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:dbname::"
+        },
+        {
+          "name": "POSTGRES_PORT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:port::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:password::"
+        },
+        {
+          "name": "DB_USER",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:username::"
+        },
+        {
+          "name": "DB_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:host::"
+        },
+        {
+          "name": "DB_NAME",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:dbname::"
+        },
+        {
+          "name": "DB_PORT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:port::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/nurlan-yagublu-dev",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "linuxParameters": {
+        "initProcessEnabled": true
+      }
+    }
+  ]
+}

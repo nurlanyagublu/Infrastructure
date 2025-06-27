@@ -1,0 +1,18 @@
+module "s3_static_website" {
+  source = "../../modules/s3-static-website"
+  
+  bucket_name = "${var.project_name}-dev-static-website"
+  
+  # S3 Configuration
+  versioning_enabled = true
+  enable_public_access = true
+  enable_website_hosting = true
+  
+  # CloudFront configuration with custom domain
+  enable_cloudfront = true
+  cloudfront_aliases = [module.route53.app_fqdn]
+  ssl_certificate_arn = module.route53.certificate_arn
+  enable_spa_routing = true
+  
+  tags = var.tags
+}

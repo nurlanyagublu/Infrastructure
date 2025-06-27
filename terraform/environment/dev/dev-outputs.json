@@ -1,0 +1,135 @@
+{
+  "alb_dns_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "nurlan-yagublu-dev-alb-668326209.us-east-1.elb.amazonaws.com"
+  },
+  "alb_zone_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "Z35SXDOTRQ7X7K"
+  },
+  "api_fqdn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "dev-api.nurlanskillup.pp.ua"
+  },
+  "app_fqdn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "dev-app.nurlanskillup.pp.ua"
+  },
+  "certificate_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:acm:us-east-1:253650698585:certificate/f2d274b0-2fe3-47eb-8558-4cae3e9b7502"
+  },
+  "db_instance_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "nurlan-yagublu-dev-postgres.ctneloibxyyb.us-east-1.rds.amazonaws.com:5432"
+  },
+  "db_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "db-DYFYHXMXOIJ4YUEWTIF4E2KVIA"
+  },
+  "ecr_repository_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:ecr:us-east-1:253650698585:repository/nurlan-yagublu-dev-flask-api"
+  },
+  "ecr_repository_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "nurlan-yagublu-dev-flask-api"
+  },
+  "ecr_repository_url": {
+    "sensitive": false,
+    "type": "string",
+    "value": "253650698585.dkr.ecr.us-east-1.amazonaws.com/nurlan-yagublu-dev-flask-api"
+  },
+  "ecs_ecs_cluster_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:ecs:us-east-1:253650698585:cluster/nurlan-yagublu-dev-cluster"
+  },
+  "ecs_ecs_service_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "nurlan-yagublu-dev-service"
+  },
+  "ecs_task_execution_role_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task-execution"
+  },
+  "ecs_task_role_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task"
+  },
+  "environment": {
+    "sensitive": false,
+    "type": "string",
+    "value": "dev"
+  },
+  "hosted_zone_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "Z0644704Y4X9BY5DWZ1T"
+  },
+  "kms_key_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:kms:us-east-1:253650698585:key/25e5970b-99d5-42b2-8971-16468f9c7f83"
+  },
+  "private_app_subnet_ids": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-0f71f2ceae447ff73",
+      "subnet-08966b4d73842fc3f"
+    ]
+  },
+  "public_subnet_ids": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-082d4f58bbdd5bee4",
+      "subnet-098a63593f409e4c7"
+    ]
+  },
+  "region": {
+    "sensitive": false,
+    "type": "string",
+    "value": "us-east-1"
+  },
+  "s3_bucket_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "nurlan-yagublu-dev-static-website"
+  },
+  "s3_website_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "nurlan-yagublu-dev-static-website.s3-website-us-east-1.amazonaws.com"
+  },
+  "vpc_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "vpc-070cab3b44e064fa9"
+  }
+}
