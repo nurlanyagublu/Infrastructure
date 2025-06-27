@@ -127,7 +127,7 @@ variable "enable_cicd_role" {
 variable "github_repository" {
   description = "GitHub repository in format 'owner/repo'"
   type        = string
-  default     = "youruser/yourrepo"  # Update with your repo
+  default     = "nurlanyagublu/infrastructure"  # Update with your repo
 }
 
 variable "github_oidc_provider_arn" {

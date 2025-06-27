@@ -1,0 +1,166 @@
+# ============================================================================
+# Terraform - Infrastructure as Code
+# ============================================================================
+
+# Terraform state files - NEVER commit these as they contain sensitive data
+*.tfstate
+*.tfstate.*
+terraform.tfstate
+terraform.tfstate.backup
+
+# Terraform variable files containing secrets
+*.tfvars
+*.tfvars.json
+terraform.tfvars
+terraform.tfvars.backup
+
+# Terraform working directories
+.terraform/
+.terraform.lock.hcl
+
+# Terraform plan files
+*.tfplan
+*.tfplan.*
+
+# Terraform crash log files
+crash.log
+crash.*.log
+
+# ============================================================================
+# AWS & Cloud Provider Credentials
+# ============================================================================
+
+# AWS CLI credentials
+.aws/
+aws-credentials
+*.pem
+*.key
+
+# Service account keys
+*-key.json
+service-account*.json
+
+# ============================================================================
+# Application Secrets & Configuration
+# ============================================================================
+
+# Environment files with secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Configuration files with secrets
+config.json
+secrets.json
+*secret*
+*credential*
+
+# Database connection strings
+database.conf
+db.conf
+
+# ============================================================================
+# Development & Build Files
+# ============================================================================
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+logs/
+
+# Node.js (if any frontend development)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================================================
+# Security & Sensitive Data
+# ============================================================================
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# SSL/TLS certificates
+*.crt
+*.cert
+*.ca-bundle
+*.p7b
+*.p7s
+*.pfx
+
+# Docker secrets
+docker-compose.override.yml
+.dockerignore
+
+# ============================================================================
+# Terraform Module Development
+# ============================================================================
+
+# Example files (remove this if you want to keep examples)
+examples/
+*.example
+
+# Test files (remove this if you want to keep tests)
+test/
+tests/
+
+# ============================================================================
+# Documentation that might contain sensitive info
+# ============================================================================
+
+# Local documentation with possibly sensitive URLs or info
+docs/local/
+NOTES.md
+TODO.md
+
+# ============================================================================
+# Custom additions
+# ============================================================================
+
+# Add any project-specific files to ignore here
