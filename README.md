@@ -1,237 +1,303 @@
-# Infrastructure as Code Repository
+# RealWorld Full-Stack Application with Infrastructure as Code
 
-This repository contains Terraform configurations for managing cloud infrastructure across multiple environments (dev, prod). The infrastructure is organized into reusable modules and environment-specific configurations.
+This repository contains a complete full-stack implementation of the [RealWorld](https://github.com/gothinkster/realworld) application, including a Vue3 frontend, Flask API backend, and comprehensive AWS infrastructure managed through Terraform.
 
 ## 🏗️ Repository Structure
 
 ```
-Infrastructure/
-├── .github/                    # GitHub workflows and templates
-├── terraform/
-│   ├── main.tf                # Root Terraform configuration
-│   ├── cost-optimized-example.tf  # Cost optimization examples
-│   ├── environment/           # Environment-specific configurations
-│   │   ├── dev/              # Development environment
-│   │   ├── prod/             # Production environment
-│   │   └── README.md         # Environment setup guide
-│   └── modules/              # Reusable Terraform modules
-│       ├── database/         # RDS database module
-│       ├── ECS/              # Elastic Container Service module
-│       ├── networking/       # VPC, subnets, security groups
-│       ├── route53/          # DNS and Route53 configuration
-│       ├── s3-static-website/ # S3 static website hosting
-│       └── security/         # Security-related resources
-├── .gitignore                # Git ignore rules
-└── README.md                 # This file
+Web_App/
+├── README.md                           # This file
+├── realworld-flask/                    # Backend API (Flask + PostgreSQL)
+│   ├── realworld/                      # Main application code
+│   │   ├── api/                        # API endpoints
+│   │   ├── app.py                      # Flask application
+│   │   └── config/                     # Configuration files
+│   ├── alembic/                        # Database migrations
+│   ├── scripts/                        # Deployment and utility scripts
+│   ├── tests/                          # API tests
+│   ├── Dockerfile                      # Container configuration
+│   ├── pyproject.toml                  # Python dependencies
+│   ├── README.md                       # Backend documentation
+│   └── TERRAFORM_DEPLOYMENT.md         # Backend deployment guide
+├── vue3-realworld-example-app/         # Frontend (Vue3 + TypeScript)
+│   ├── src/                            # Source code
+│   │   ├── components/                 # Vue components
+│   │   ├── pages/                      # Page components
+│   │   ├── services/                   # API services
+│   │   ├── store/                      # Pinia state management
+│   │   └── types/                      # TypeScript types
+│   ├── cypress/                        # E2E tests
+│   ├── dist/                           # Built application
+│   ├── scripts/                        # Build and deployment scripts
+│   ├── Dockerfile                      # Container configuration
+│   ├── package.json                    # Node.js dependencies
+│   ├── README.md                       # Frontend documentation
+│   ├── DEPLOYMENT_GUIDE.md             # Frontend deployment guide
+│   └── FRONTEND_INSTRUCTIONS.md        # Development instructions
+└── terraform/                          # Infrastructure as Code
+    ├── main.tf                         # Root Terraform configuration
+    ├── cost-optimized-example.tf       # Cost optimization examples
+    ├── environment/                    # Environment-specific configs
+    │   ├── dev/                        # Development environment
+    │   ├── prod/                       # Production environment
+    │   └── README.md                   # Environment setup guide
+    └── modules/                        # Reusable Terraform modules
+        ├── database/                   # RDS PostgreSQL module
+        ├── ECS/                        # Container orchestration
+        ├── networking/                 # VPC, subnets, security
+        ├── route53/                    # DNS and SSL certificates
+        ├── s3-static-website/          # Static website hosting
+        └── security/                   # IAM, KMS, security policies
 ```
+
+## 🚀 Architecture Overview
+
+```
+Internet → Route 53 → CloudFront → S3 (Vue3 Frontend)
+                          ↓
+Internet → Route 53 → ALB → ECS Fargate (Flask API) → RDS PostgreSQL
+                          ↓
+                     CloudWatch (Monitoring & Logging)
+```
+
+### Components
+
+- **Frontend**: Vue3 + TypeScript + Pinia + Vite
+- **Backend**: Flask + SQLAlchemy + PostgreSQL + Alembic
+- **Infrastructure**: AWS ECS Fargate + RDS + S3 + CloudFront + Route53
+- **Containerization**: Docker for both frontend and backend
+- **CI/CD**: GitHub Actions with OIDC authentication
+- **Monitoring**: CloudWatch with comprehensive logging
+
+## 🌟 Features
+
+### Application Features
+- ✅ **Authentication & Authorization** (JWT tokens)
+- ✅ **CRUD Operations** (Articles, Comments, User profiles)
+- ✅ **Real-time Updates** (Following users, favoriting articles)
+- ✅ **Responsive Design** (Mobile-first approach)
+- ✅ **Type Safety** (Full TypeScript implementation)
+- ✅ **State Management** (Pinia stores)
+- ✅ **E2E Testing** (Cypress test suite)
+
+### Infrastructure Features
+- ✅ **Multi-Environment Support** (Dev/Prod with different configurations)
+- ✅ **Auto-Scaling** (ECS services with target tracking)
+- ✅ **High Availability** (Multi-AZ deployment in production)
+- ✅ **SSL/TLS Termination** (ACM certificates with automatic renewal)
+- ✅ **Content Distribution** (CloudFront CDN for global performance)
+- ✅ **Security** (VPC isolation, security groups, IAM roles)
+- ✅ **Monitoring** (CloudWatch dashboards, alarms, and logging)
+- ✅ **Cost Optimization** (Environment-specific resource sizing)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Terraform** >= 1.0
 - **AWS CLI** configured with appropriate credentials
-- **Git** for version control
-- **Git LFS** for large file handling
+- **Terraform** >= 1.0
+- **Docker** for local development
+- **Node.js** >= 18 (for frontend development)
+- **Python** >= 3.11 (for backend development)
 
-### Setup
+### 1. Clone and Setup
 
-1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd Web_App
+```
+
+### 2. Infrastructure Deployment
+
+Deploy the infrastructure first (choose dev or prod):
+
+```bash
+cd terraform/environment/dev  # or prod
+terraform init
+terraform plan
+terraform apply
+```
+
+For detailed infrastructure setup, see: [`terraform/environment/README.md`](terraform/environment/README.md)
+
+### 3. Backend Development
+
+```bash
+cd realworld-flask
+
+# Setup Python environment
+poetry install
+
+# Run database migrations
+alembic upgrade head
+
+# Start the development server
+poetry run python -m realworld.app
+```
+
+For detailed backend setup, see: [`realworld-flask/README.md`](realworld-flask/README.md)
+
+### 4. Frontend Development
+
+```bash
+cd vue3-realworld-example-app
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+For detailed frontend setup, see: [`vue3-realworld-example-app/README.md`](vue3-realworld-example-app/README.md)
+
+## 🔧 Development Workflow
+
+### Local Development
+
+1. **Start the backend**:
    ```bash
-   git clone https://github.com/nurlanyagublu/Infrastructure.git
-   cd Infrastructure
+   cd realworld-flask
+   poetry run python -m realworld.app
    ```
 
-2. **Initialize Terraform:**
+2. **Start the frontend**:
    ```bash
-   cd terraform/environment/dev  # or prod
-   terraform init
+   cd vue3-realworld-example-app
+   npm run dev
    ```
 
-3. **Plan your deployment:**
+3. **Run tests**:
    ```bash
-   terraform plan
+   # Backend tests
+   cd realworld-flask && poetry run pytest
+
+   # Frontend tests
+   cd vue3-realworld-example-app && npm run test
+
+   # E2E tests
+   cd vue3-realworld-example-app && npm run cypress:run
    ```
 
-4. **Apply the configuration:**
+### Deployment
+
+1. **Build and push containers**:
    ```bash
+   # Backend
+   cd realworld-flask && docker build -t your-registry/realworld-api .
+
+   # Frontend
+   cd vue3-realworld-example-app && npm run build
+   ```
+
+2. **Deploy via CI/CD** (GitHub Actions automatically handles deployment)
+
+3. **Manual deployment** (if needed):
+   ```bash
+   cd terraform/environment/prod
    terraform apply
    ```
 
-## 🏢 Infrastructure Modules
+## 🌍 Environment Configuration
 
-### 🌐 Networking Module
-- **VPC** with public and private subnets
-- **Internet Gateway** and **NAT Gateway**
-- **Security Groups** with predefined rules
-- **Route Tables** for traffic management
-
-### 🐳 ECS Module
-- **ECS Cluster** for container orchestration
-- **ECS Services** and **Task Definitions**
-- **CloudWatch** logging and monitoring
-- **Application Load Balancer** integration
-
-### 🗄️ Database Module
-- **RDS instances** with Multi-AZ support
-- **Subnet Groups** for database placement
-- **CloudWatch** monitoring and alarms
-- **Backup and maintenance** configurations
-
-### 🔒 Security Module
-- **IAM roles** and policies
-- **Security Groups** and **NACLs**
-- **KMS keys** for encryption
-- **CloudTrail** for audit logging
-
-### 🌍 Route53 Module
-- **DNS zones** and **record management**
-- **Health checks** and **failover routing**
-- **SSL certificate** integration
-
-### 📦 S3 Static Website Module
-- **S3 buckets** for static content
-- **CloudFront** distribution
-- **SSL certificate** configuration
-- **Custom domain** support
-
-## 🌍 Environments
-
-### Development (dev)
-- **Purpose**: Development and testing
-- **Instance sizes**: Smaller, cost-optimized
+### Development Environment
+- **Cost-optimized**: Small instance sizes, single AZ
+- **Domains**: `dev-app.yourdomain.com`, `dev-api.yourdomain.com`
+- **Database**: db.t3.micro with 1-day backup retention
 - **Monitoring**: Basic CloudWatch metrics
-- **Backup**: Daily snapshots
 
-### Production (prod)
-- **Purpose**: Production workloads
-- **Instance sizes**: Production-grade
+### Production Environment
+- **High availability**: Multi-AZ deployment, auto-scaling
+- **Domains**: `app.yourdomain.com`, `api.yourdomain.com`
+- **Database**: db.t3.small with 30-day backup retention
 - **Monitoring**: Comprehensive monitoring and alerting
-- **Backup**: Automated backups with retention
 
-## 📋 Usage Guidelines
+## 📋 Deployment Guides
 
-### Deploying to a New Environment
+- **Infrastructure Setup**: [`terraform/environment/README.md`](terraform/environment/README.md)
+- **Backend Deployment**: [`realworld-flask/TERRAFORM_DEPLOYMENT.md`](realworld-flask/TERRAFORM_DEPLOYMENT.md)
+- **Frontend Deployment**: [`vue3-realworld-example-app/DEPLOYMENT_GUIDE.md`](vue3-realworld-example-app/DEPLOYMENT_GUIDE.md)
 
-1. **Navigate to the environment directory:**
-   ```bash
-   cd terraform/environment/[dev|prod]
-   ```
+## 🔒 Security Features
 
-2. **Copy and customize terraform.tfvars:**
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   # Edit terraform.tfvars with your specific values
-   ```
+- **Network Isolation**: VPC with private subnets for database and application
+- **Encryption**: KMS encryption for all data at rest and in transit
+- **Access Control**: IAM roles with least-privilege principles
+- **Secrets Management**: AWS Secrets Manager for sensitive data
+- **Security Groups**: Restrictive firewall rules
+- **SSL/TLS**: End-to-end encryption with ACM certificates
 
-3. **Initialize and deploy:**
-   ```bash
-   terraform init
-   terraform plan
-   terraform apply
-   ```
+## 📊 Monitoring and Observability
 
-### Making Changes
+- **Application Metrics**: Custom CloudWatch metrics
+- **Infrastructure Monitoring**: ECS, RDS, and ALB metrics
+- **Logging**: Centralized logging with CloudWatch Logs
+- **Alerting**: SNS notifications for critical events
+- **Dashboards**: Pre-configured CloudWatch dashboards
 
-1. **Create a new branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## 💰 Cost Optimization
 
-2. **Make your changes** to the Terraform files
+- **Environment-specific sizing**: Different resource allocation per environment
+- **Auto-scaling**: Scale resources based on demand
+- **Cost monitoring**: Billing alerts and cost tracking
+- **Resource optimization**: Regular review of unused resources
 
-3. **Test your changes:**
-   ```bash
-   terraform plan
-   ```
+## 🧪 Testing
 
-4. **Commit and push:**
-   ```bash
-   git add .
-   git commit -m "Description of changes"
-   git push origin feature/your-feature-name
-   ```
+### Backend Testing
+- **Unit Tests**: pytest with comprehensive coverage
+- **Integration Tests**: API endpoint testing
+- **Database Tests**: Alembic migration testing
 
-5. **Create a Pull Request** for review
+### Frontend Testing
+- **Unit Tests**: Vitest for component testing
+- **E2E Tests**: Cypress for full application flow
+- **Type Checking**: TypeScript for compile-time verification
 
-## 🔧 Best Practices
-
-### Code Organization
-- Use **modules** for reusable components
-- Keep **environment-specific** configurations separate
-- Follow **consistent naming** conventions
-- Add **comprehensive documentation**
-
-### Security
-- **Never commit** sensitive data (use terraform.tfvars files)
-- Use **IAM roles** with least privilege
-- Enable **encryption** at rest and in transit
-- Regularly **rotate credentials**
-
-### Cost Optimization
-- Use **appropriate instance sizes** for each environment
-- Implement **auto-scaling** where possible
-- Set up **billing alerts** and **cost monitoring**
-- Review **unused resources** regularly
-
-## 📊 Monitoring and Alerting
-
-- **CloudWatch** dashboards for key metrics
-- **SNS notifications** for critical alerts
-- **Cost and billing** alerts
-- **Security** monitoring with CloudTrail
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-1. **Terraform state lock errors:**
-   ```bash
-   terraform force-unlock [LOCK_ID]
-   ```
-
-2. **Resource conflicts:**
-   - Check for existing resources with same names
-   - Review terraform state file
-
-3. **Permission errors:**
-   - Verify AWS credentials and permissions
-   - Check IAM policies
-
-### Getting Help
-
-- Review module-specific README files
-- Check Terraform documentation
-- Contact the infrastructure team
+### Infrastructure Testing
+- **Terraform Validation**: syntax and plan validation
+- **Security Scanning**: Infrastructure security analysis
+- **Cost Estimation**: Terraform cost analysis
 
 ## 🤝 Contributing
 
 1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes
-4. **Test** thoroughly
-5. **Submit** a pull request
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add some amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-## 📝 Documentation
+### Development Guidelines
 
-- Each module contains its own README with specific documentation
-- Check the `terraform/environment/README.md` for environment setup
-- Review individual module documentation for detailed usage
+- Follow existing code style and conventions
+- Add tests for new features
+- Update documentation as needed
+- Test changes in development environment first
 
-## 🔒 Security Considerations
+## 📞 Support and Documentation
 
-- All sensitive data should be stored in AWS Secrets Manager or Parameter Store
-- Use terraform.tfvars files for environment-specific values (not committed to git)
-- Regularly audit IAM permissions and security groups
-- Keep Terraform and provider versions up to date
+### Getting Help
+- **Issues**: Create GitHub issues for bugs or feature requests
+- **Discussions**: Use GitHub Discussions for questions
+- **Documentation**: Check component-specific README files
 
-## 📞 Support
+### Documentation Index
+- [Infrastructure Guide](terraform/environment/README.md)
+- [Backend API Documentation](realworld-flask/README.md)
+- [Frontend Development Guide](vue3-realworld-example-app/README.md)
+- [Deployment Guides](vue3-realworld-example-app/DEPLOYMENT_GUIDE.md)
 
-For questions or issues:
-- Create an issue in this repository
-- Contact the DevOps team
-- Check the troubleshooting section above
+## 📄 License
+
+This project is licensed under the MIT License - see the individual component LICENSE files for details.
+
+## 🙏 Acknowledgments
+
+- [RealWorld](https://github.com/gothinkster/realworld) - The specification and community
+- [Vue3](https://v3.vuejs.org/) - The progressive JavaScript framework
+- [Flask](https://flask.palletsprojects.com/) - The Python web framework
+- [Terraform](https://www.terraform.io/) - Infrastructure as Code tool
 
 ---
 
-**Note**: This infrastructure is managed using Infrastructure as Code principles. Always use Terraform for any infrastructure changes and avoid manual modifications through the AWS console.
+**Note**: This is a production-ready implementation following best practices for security, scalability, and maintainability. All infrastructure changes should be made through Terraform to maintain consistency and version control.
