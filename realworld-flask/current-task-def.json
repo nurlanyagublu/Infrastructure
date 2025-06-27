@@ -1,0 +1,160 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:253650698585:task-definition/nurlan-yagublu-dev-flask-api:2",
+    "containerDefinitions": [
+        {
+            "name": "flask-api",
+            "image": "253650698585.dkr.ecr.us-east-1.amazonaws.com/nurlan-yagublu-dev-flask-api:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "FLASK_RUN_PORT",
+                    "value": "8080"
+                },
+                {
+                    "name": "FLASK_APP",
+                    "value": "realworld.app"
+                },
+                {
+                    "name": "FLASK_ENV",
+                    "value": "development"
+                },
+                {
+                    "name": "FLASK_RUN_HOST",
+                    "value": "0.0.0.0"
+                },
+                {
+                    "name": "AWS_DEFAULT_REGION",
+                    "value": "us-east-1"
+                },
+                {
+                    "name": "APP_NAME",
+                    "value": "nurlan-yagublu"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "DEBUG"
+                },
+                {
+                    "name": "DB_SSL_MODE",
+                    "value": "require"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "POSTGRES_PASSWORD",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:password::"
+                },
+                {
+                    "name": "POSTGRES_USER",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:username::"
+                },
+                {
+                    "name": "POSTGRES_HOST",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:host::"
+                },
+                {
+                    "name": "POSTGRES_DB",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu-dev-db-credentials-KYpslA:dbname::"
+                },
+                {
+                    "name": "SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu/dev/app-secrets-6XLWaI:flask_secret::"
+                },
+                {
+                    "name": "JWT_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:253650698585:secret:nurlan-yagublu/dev/app-secrets-6XLWaI:jwt_secret::"
+                }
+            ],
+            "ulimits": [
+                {
+                    "name": "nofile",
+                    "softLimit": 65536,
+                    "hardLimit": 65536
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/nurlan-yagublu-dev",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:8080/api/health || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "nurlan-yagublu-dev-flask-api",
+    "taskRoleArn": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task-role",
+    "executionRoleArn": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-execution-role",
+    "networkMode": "awsvpc",
+    "revision": 2,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "registeredAt": "2025-06-25T21:58:04.505000+02:00",
+    "registeredBy": "arn:aws:iam::253650698585:user/nurlanyagublu_appserver"
+}

@@ -1,0 +1,116 @@
+{
+  "family": "realworld-flask",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "realworld-flask",
+      "image": "${ECR_REPOSITORY_URI}:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "FLASK_ENV",
+          "value": "production"
+        },
+        {
+          "name": "FLASK_APP",
+          "value": "realworld.app"
+        },
+        {
+          "name": "FLASK_RUN_HOST",
+          "value": "0.0.0.0"
+        },
+        {
+          "name": "FLASK_RUN_PORT",
+          "value": "8080"
+        },
+        {
+          "name": "POSTGRES_HOST",
+          "value": "${RDS_ENDPOINT}"
+        },
+        {
+          "name": "POSTGRES_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "POSTGRES_DB",
+          "value": "realworlddb"
+        },
+        {
+          "name": "POSTGRES_USER",
+          "value": "${RDS_USERNAME}"
+        },
+        {
+          "name": "DB_SSL_MODE",
+          "value": "require"
+        },
+        {
+          "name": "DB_POOL_SIZE",
+          "value": "20"
+        },
+        {
+          "name": "DB_MAX_OVERFLOW",
+          "value": "40"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "INFO"
+        },
+        {
+          "name": "APP_NAME",
+          "value": "realworld-flask"
+        },
+        {
+          "name": "APP_VERSION",
+          "value": "1.0.0"
+        },
+        {
+          "name": "CORS_ORIGINS",
+          "value": "${CORS_ORIGINS}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:realworld/rds/password:password::"
+        },
+        {
+          "name": "SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:realworld/flask/secret-key:secret::"
+        },
+        {
+          "name": "JWT_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:realworld/jwt/secret-key:secret::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/realworld-flask",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/api/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
