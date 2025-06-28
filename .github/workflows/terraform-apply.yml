@@ -1,0 +1,113 @@
+name: 🚀 Terraform Apply
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform-*.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  TF_VERSION: '1.6.0'
+  AWS_REGION: us-east-1
+
+jobs:
+  terraform-apply:
+    name: 🏗️ Deploy Infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    permissions:
+      id-token: write
+      contents: read
+      
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🔧 Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: ⚡ Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+        
+      - name: 📋 Terraform Format
+        run: terraform fmt -recursive
+        working-directory: ./terraform
+        
+      - name: ✅ Terraform Validate
+        run: terraform validate
+        working-directory: ./terraform
+        
+      - name: 📊 Terraform Plan
+        id: plan
+        run: |
+          ENV="${{ github.event.inputs.environment || 'dev' }}"
+          terraform plan -var-file="environments/${ENV}.tfvars" -out=tfplan
+          terraform show -no-color tfplan > plan_output.txt
+          echo "Changes detected:"
+          cat plan_output.txt | grep -E "(Plan:|No changes)"
+        working-directory: ./terraform
+        
+      - name: 🚀 Terraform Apply
+        id: apply
+        run: |
+          ENV="${{ github.event.inputs.environment || 'dev' }}"
+          echo "🌍 Deploying to: ${ENV}"
+          terraform apply -auto-approve tfplan
+          
+          # Output important values
+          echo "📋 Infrastructure Outputs:"
+          terraform output -json > outputs.json
+          cat outputs.json
+        working-directory: ./terraform
+        
+      - name: 📊 Save Terraform Outputs
+        run: |
+          # Save outputs as artifacts for other workflows
+          cp terraform/outputs.json infrastructure-outputs.json
+          
+          # Extract key values for subsequent jobs
+          echo "ECS_CLUSTER_NAME=$(cat infrastructure-outputs.json | jq -r '.ecs_cluster_name.value')" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY_URI=$(cat infrastructure-outputs.json | jq -r '.ecr_repository_uri.value')" >> $GITHUB_ENV
+          echo "S3_BUCKET_NAME=$(cat infrastructure-outputs.json | jq -r '.s3_bucket_name.value')" >> $GITHUB_ENV
+          echo "CLOUDFRONT_DISTRIBUTION_ID=$(cat infrastructure-outputs.json | jq -r '.cloudfront_distribution_id.value')" >> $GITHUB_ENV
+          
+      - name: 📦 Upload Infrastructure Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: infrastructure-outputs-${{ github.event.inputs.environment || 'dev' }}
+          path: infrastructure-outputs.json
+          retention-days: 30
+          
+      - name: ✅ Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Infrastructure Resources:" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECS Cluster:** $ECS_CLUSTER_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Repository:** $ECR_REPOSITORY_URI" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Bucket:** $S3_BUCKET_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront:** $CLOUDFRONT_DISTRIBUTION_ID" >> $GITHUB_STEP_SUMMARY
