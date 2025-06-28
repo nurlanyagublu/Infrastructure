@@ -1,0 +1,54 @@
+name: 🔒 Security Scan
+
+on:
+  pull_request:
+    paths:
+      - 'realworld-flask/**'
+      - 'vue3-realworld-example-app/**'
+      - 'terraform/**'
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'all'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+
+      - name: 💾 Upload Vulnerability Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-vulnerability-report
+          path: trivy-vul-report.txt
+
+      - name: 🚨 Bandit Security Linter
+        uses: dorny/paths-filter@v2
+        id: filter-paths-flask
+        with:
+          filters: |
+            flask:
+              - 'realworld-flask/**'
+
+      - name: 🔍 Run Bandit
+        if: steps.filter-paths-flask.outputs.flask == 'true'
+        env:
+          INPUT_JSON: "$(cat bandit-output.json)"
+        run: |
+          pip install bandit
+          bandit -r realworld-flask/ --json -o bandit-output.json || true
+          echo "$INPUT_JSON" | jq '.' > bandit-output-pretty.json
+
+      - name: 📊 Display Summary
+        run: |
+          echo "## 🔒 Security Summary Completed!"

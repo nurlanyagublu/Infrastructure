@@ -1,0 +1,216 @@
+name: 🐍 Backend Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'realworld-flask/**'
+      - '.github/workflows/backend-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-deploy:
+    name: 🏗️ Build & Deploy Flask App
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    permissions:
+      id-token: write
+      contents: read
+      
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: 📊 Get Infrastructure Info
+        id: infra
+        run: |
+          ENV="${{ github.event.inputs.environment || 'dev' }}"
+          
+          # Get ECR repository URI
+          ECR_URI=$(aws ecr describe-repositories --repository-names "realworld-flask-${ENV}" --query 'repositories[0].repositoryUri' --output text)
+          echo "ECR_REPOSITORY_URI=$ECR_URI" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=${ECR_URI%/*}" >> $GITHUB_ENV
+          
+          # Get ECS cluster and service names
+          ECS_CLUSTER="realworld-${ENV}"
+          ECS_SERVICE="realworld-flask-${ENV}"
+          echo "ECS_CLUSTER=$ECS_CLUSTER" >> $GITHUB_ENV
+          echo "ECS_SERVICE=$ECS_SERVICE" >> $GITHUB_ENV
+          
+          echo "📋 Infrastructure Info:"
+          echo "- ECR Repository: $ECR_URI"
+          echo "- ECS Cluster: $ECS_CLUSTER"
+          echo "- ECS Service: $ECS_SERVICE"
+          
+      - name: 🐳 Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          
+      - name: 🏗️ Build Docker Image
+        run: |
+          cd realworld-flask
+          
+          # Generate build info
+          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          GIT_COMMIT=${GITHUB_SHA:0:7}
+          VERSION="${{ github.event.inputs.environment || 'dev' }}-${GIT_COMMIT}"
+          
+          echo "🔨 Building Flask app..."
+          echo "- Version: $VERSION"
+          echo "- Commit: $GIT_COMMIT"
+          echo "- Date: $BUILD_DATE"
+          
+          # Build the Docker image
+          docker build \
+            --build-arg BUILD_DATE="$BUILD_DATE" \
+            --build-arg GIT_COMMIT="$GIT_COMMIT" \
+            --build-arg VERSION="$VERSION" \
+            -t ${{ env.ECR_REPOSITORY_URI }}:latest \
+            -t ${{ env.ECR_REPOSITORY_URI }}:$VERSION \
+            .
+          
+          echo "IMAGE_TAG=$VERSION" >> $GITHUB_ENV
+          
+      - name: 🧪 Test Docker Image
+        run: |
+          echo "🧪 Testing Docker image..."
+          
+          # Start container in background
+          docker run -d --name test-app \
+            -p 5000:5000 \
+            -e DATABASE_URL="sqlite:///test.db" \
+            -e SECRET_KEY="test-secret" \
+            ${{ env.ECR_REPOSITORY_URI }}:latest
+          
+          # Wait for app to start
+          sleep 10
+          
+          # Test health endpoint
+          curl -f http://localhost:5000/api/health || exit 1
+          
+          # Cleanup
+          docker stop test-app
+          docker rm test-app
+          
+          echo "✅ Docker image tests passed!"
+          
+      - name: 📤 Push to ECR
+        run: |
+          echo "📤 Pushing images to ECR..."
+          docker push ${{ env.ECR_REPOSITORY_URI }}:latest
+          docker push ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
+          
+          echo "✅ Images pushed successfully!"
+          
+      - name: 📋 Update ECS Task Definition
+        id: task-def
+        run: |
+          # Get current task definition
+          TASK_DEF_ARN=$(aws ecs describe-services \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }} \
+            --query 'services[0].taskDefinition' \
+            --output text)
+          
+          # Download current task definition
+          aws ecs describe-task-definition \
+            --task-definition $TASK_DEF_ARN \
+            --query 'taskDefinition' > task-definition.json
+          
+          # Update image URI in task definition
+          jq --arg IMAGE "${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}" \
+            '.containerDefinitions[0].image = $IMAGE' \
+            task-definition.json > new-task-definition.json
+          
+          # Remove unnecessary fields
+          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)' \
+            new-task-definition.json > clean-task-definition.json
+          
+          # Register new task definition
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://clean-task-definition.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          
+          echo "NEW_TASK_DEFINITION_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+          echo "✅ New task definition registered: $NEW_TASK_DEF_ARN"
+          
+      - name: 🚀 Deploy to ECS
+        run: |
+          echo "🚀 Deploying to ECS..."
+          
+          # Update service with new task definition
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ env.NEW_TASK_DEFINITION_ARN }} \
+            --force-new-deployment
+          
+          echo "⏳ Waiting for deployment to complete..."
+          
+          # Wait for service to be stable
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }}
+          
+          echo "✅ ECS deployment completed successfully!"
+          
+      - name: 🔍 Verify Deployment
+        run: |
+          # Get service URL from load balancer
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names "realworld-${{ github.event.inputs.environment || 'dev' }}-alb" \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text)
+          
+          SERVICE_URL="http://${ALB_DNS}"
+          
+          echo "🔍 Verifying deployment..."
+          echo "Service URL: $SERVICE_URL"
+          
+          # Wait a bit for ALB to update
+          sleep 30
+          
+          # Test health endpoint
+          for i in {1..5}; do
+            if curl -f "${SERVICE_URL}/api/health"; then
+              echo "✅ Health check passed!"
+              break
+            else
+              echo "⏳ Attempt $i failed, retrying in 10s..."
+              sleep 10
+            fi
+          done
+          
+      - name: ✅ Deployment Summary
+        run: |
+          echo "## 🚀 Backend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** ${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ECS Cluster:** ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ECS Service:** ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Deployment Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Task Definition:** ${{ env.NEW_TASK_DEFINITION_ARN }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Image:** ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
