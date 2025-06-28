@@ -1,0 +1,68 @@
+services:
+  realworld:
+    build:
+      context: . 
+      dockerfile: ./Dockerfile
+    volumes:
+      # Only mount in development
+      - .:/app
+    networks:
+      - realworld
+    ports:
+      - "${FLASK_RUN_PORT:-8080}:8080"
+    environment:
+      FLASK_APP: ${FLASK_APP:-realworld.app}
+      FLASK_ENV: ${FLASK_ENV:-development}
+      FLASK_RUN_PORT: ${FLASK_RUN_PORT:-8080}
+      FLASK_RUN_HOST: 0.0.0.0
+      POSTGRES_DB: ${POSTGRES_DB:-realworlddb}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER:-testuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret}
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+      INIT_DB: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    stdin_open: true
+    tty: true
+    command: ["./scripts/start.sh"]
+
+  postgres:
+    image: postgres:15-alpine
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-realworlddb}
+      POSTGRES_USER: ${POSTGRES_USER:-testuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-testuser} -d ${POSTGRES_DB:-realworlddb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - realworld
+
+networks:
+  realworld:
+    name: "realworld"
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
