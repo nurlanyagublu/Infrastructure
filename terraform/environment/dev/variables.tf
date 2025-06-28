@@ -160,3 +160,8 @@ variable "tags" {
     CostCenter  = "development"
   }
 }
+
+# CI/CD Test: This comment added on Sat Jun 28 06:46:59 PM CEST 2025
+# This change should trigger the terraform-plan.yml workflow
+# Testing automatic Terraform validation on PRs
+
