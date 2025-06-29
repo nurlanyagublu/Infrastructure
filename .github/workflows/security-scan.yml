@@ -20,7 +20,19 @@ jobs:
       - name: 🔍 Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'all'
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+
+      - name: 🔍 Trivy Table Output
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
           format: 'table'
           exit-code: '0'
           ignore-unfixed: true
@@ -28,9 +40,10 @@ jobs:
 
       - name: 💾 Upload Vulnerability Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: trivy-vulnerability-report
-          path: trivy-vul-report.txt
+          path: trivy-results.sarif
 
       - name: 🚨 Bandit Security Linter
         uses: dorny/paths-filter@v2
@@ -42,13 +55,24 @@ jobs:
 
       - name: 🔍 Run Bandit
         if: steps.filter-paths-flask.outputs.flask == 'true'
-        env:
-          INPUT_JSON: "$(cat bandit-output.json)"
         run: |
           pip install bandit
-          bandit -r realworld-flask/ --json -o bandit-output.json || true
-          echo "$INPUT_JSON" | jq '.' > bandit-output-pretty.json
+          bandit -r realworld-flask/ --format json --output bandit-output.json || true
+          if [ -f bandit-output.json ]; then
+            python3 -m json.tool bandit-output.json > bandit-output-pretty.json || echo "{}" > bandit-output-pretty.json
+          fi
+
+      - name: 💾 Upload Bandit Report
+        if: steps.filter-paths-flask.outputs.flask == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-security-report
+          path: bandit-output-pretty.json
 
       - name: 📊 Display Summary
         run: |
           echo "## 🔒 Security Summary Completed!"
+          echo "✅ Trivy vulnerability scan completed"
+          if [ -f bandit-output-pretty.json ]; then
+            echo "✅ Bandit security scan completed"
+          fi
