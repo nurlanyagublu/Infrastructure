@@ -282,8 +282,20 @@ resource "aws_ecs_task_definition" "app" {
           value = tostring(var.app_port)
         },
         {
+          name  = "FLASK_RUN_PORT"
+          value = tostring(var.app_port)
+        },
+        {
           name  = "AWS_DEFAULT_REGION"
           value = data.aws_region.current.name
+        },
+        {
+          name  = "INIT_DB"
+          value = "true"
+        },
+        {
+          name  = "CORS_ORIGINS"
+          value = "https://dev2-app.nurlanskillup.pp.ua,http://localhost:3000"
         }
       ]
 
@@ -394,7 +406,7 @@ resource "aws_lb_target_group" "app" {
 # ALB Listener (HTTP)
 resource "aws_lb_listener" "app_http" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "80"
+  port              = "8080"
   protocol          = "HTTP"
 
   default_action {

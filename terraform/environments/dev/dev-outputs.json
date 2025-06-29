@@ -2,7 +2,7 @@
   "alb_dns_name": {
     "sensitive": false,
     "type": "string",
-    "value": "nurlan-yagublu-dev-alb-668326209.us-east-1.elb.amazonaws.com"
+    "value": "nurlan-yagublu-dev2-alb-668326209.us-east-1.elb.amazonaws.com"
   },
   "alb_zone_id": {
     "sensitive": false,
@@ -12,12 +12,12 @@
   "api_fqdn": {
     "sensitive": false,
     "type": "string",
-    "value": "dev-api.nurlanskillup.pp.ua"
+    "value": "dev2-api.nurlanskillup.pp.ua"
   },
   "app_fqdn": {
     "sensitive": false,
     "type": "string",
-    "value": "dev-app.nurlanskillup.pp.ua"
+    "value": "dev2-app.nurlanskillup.pp.ua"
   },
   "certificate_arn": {
     "sensitive": false,
@@ -27,7 +27,7 @@
   "db_instance_endpoint": {
     "sensitive": false,
     "type": "string",
-    "value": "nurlan-yagublu-dev-postgres.ctneloibxyyb.us-east-1.rds.amazonaws.com:5432"
+    "value": "nurlan-yagublu-dev2-postgres.ctneloibxyyb.us-east-1.rds.amazonaws.com:5432"
   },
   "db_instance_id": {
     "sensitive": false,
@@ -37,42 +37,42 @@
   "ecr_repository_arn": {
     "sensitive": false,
     "type": "string",
-    "value": "arn:aws:ecr:us-east-1:253650698585:repository/nurlan-yagublu-dev-flask-api"
+    "value": "arn:aws:ecr:us-east-1:253650698585:repository/nurlan-yagublu-dev2-flask-api"
   },
   "ecr_repository_name": {
     "sensitive": false,
     "type": "string",
-    "value": "nurlan-yagublu-dev-flask-api"
+    "value": "nurlan-yagublu-dev2-flask-api"
   },
   "ecr_repository_url": {
     "sensitive": false,
     "type": "string",
-    "value": "253650698585.dkr.ecr.us-east-1.amazonaws.com/nurlan-yagublu-dev-flask-api"
+    "value": "253650698585.dkr.ecr.us-east-1.amazonaws.com/nurlan-yagublu-dev2-flask-api"
   },
   "ecs_ecs_cluster_id": {
     "sensitive": false,
     "type": "string",
-    "value": "arn:aws:ecs:us-east-1:253650698585:cluster/nurlan-yagublu-dev-cluster"
+    "value": "arn:aws:ecs:us-east-1:253650698585:cluster/nurlan-yagublu-dev2-cluster"
   },
   "ecs_ecs_service_name": {
     "sensitive": false,
     "type": "string",
-    "value": "nurlan-yagublu-dev-service"
+    "value": "nurlan-yagublu-dev2-service"
   },
   "ecs_task_execution_role_arn": {
     "sensitive": false,
     "type": "string",
-    "value": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task-execution"
+    "value": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev2-ecs-task-execution"
   },
   "ecs_task_role_arn": {
     "sensitive": false,
     "type": "string",
-    "value": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev-ecs-task"
+    "value": "arn:aws:iam::253650698585:role/nurlan-yagublu-dev2-ecs-task"
   },
   "environment": {
     "sensitive": false,
     "type": "string",
-    "value": "dev"
+    "value": "dev2"
   },
   "hosted_zone_id": {
     "sensitive": false,
@@ -120,12 +120,12 @@
   "s3_bucket_id": {
     "sensitive": false,
     "type": "string",
-    "value": "nurlan-yagublu-dev-static-website"
+    "value": "nurlan-yagublu-dev2-static-website"
   },
   "s3_website_endpoint": {
     "sensitive": false,
     "type": "string",
-    "value": "nurlan-yagublu-dev-static-website.s3-website-us-east-1.amazonaws.com"
+    "value": "nurlan-yagublu-dev2-static-website.s3-website-us-east-1.amazonaws.com"
   },
   "vpc_id": {
     "sensitive": false,

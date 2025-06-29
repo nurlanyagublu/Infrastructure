@@ -18,8 +18,10 @@ provider "aws" {
   
   default_tags {
     tags = {
-      Environment = "dev"
+      Environment = "dev2"
       Project     = var.project_name
+      CostCenter  = "development"
+      owner       = "nurlan.yagublu@nixs.com"
       ManagedBy   = "terraform"
     }
   }
@@ -30,7 +32,7 @@ module "security" {
   source = "../../modules/security"
   
   project_name = var.project_name
-  environment  = "dev"
+  environment = "dev2"
   aws_region   = var.aws_region
   
   # CI/CD Configuration
@@ -49,11 +51,11 @@ module "security" {
       secure = false
     }
     max_connections = {
-      value  = "50"  # Lower for dev
+      value  = "50"  # Lower for dev2
       secure = false
     }
     session_timeout = {
-      value  = "7200"  # Longer for dev
+      value  = "7200"  # Longer for dev2
       secure = false
     }
   }
@@ -66,7 +68,7 @@ module "networking" {
   source = "../../modules/networking"
   
   project_name = var.project_name
-  environment  = "dev"
+  environment = "dev2"
   
   # VPC Configuration
   vpc_cidr                    = var.vpc_cidr
@@ -77,11 +79,11 @@ module "networking" {
   # Application Configuration
   app_port = var.app_port
   
-  # Features (cost-optimized for dev)
+  # Features (cost-optimized for dev2)
   enable_nat_gateway   = true   # Needed for ECS tasks to pull images
-  enable_vpc_endpoints = false  # Disabled to save costs in dev
-  enable_bastion      = false   # Disabled for dev
-  single_nat_gateway  = true    # Cost optimization for dev
+  enable_vpc_endpoints = false  # Disabled to save costs in dev2
+  enable_bastion      = false   # Disabled for dev2
+  single_nat_gateway  = true    # Cost optimization for dev2
   
   common_tags = var.tags
 }
@@ -92,7 +94,7 @@ module "database" {
   
   # Basic Configuration
   project_name = var.project_name
-  environment  = "dev"
+  environment = "dev2"
   
   # Database Configuration
   postgres_version   = var.db_engine_version
@@ -115,23 +117,23 @@ module "database" {
   private_db_subnet_ids = module.networking.private_db_subnet_ids
   rds_security_group_id = module.networking.rds_security_group_id
   
-  # Backup Configuration (relaxed for dev)
-  backup_retention_period = 3  # Shorter retention for dev
+  # Backup Configuration (relaxed for dev2)
+  backup_retention_period = 3  # Shorter retention for dev2
   backup_window          = var.backup_window
   maintenance_window     = var.maintenance_window
   
-  # Monitoring (disabled for dev to save costs)
+  # Monitoring (disabled for dev2 to save costs)
   monitoring_interval             = 0
   enabled_cloudwatch_logs_exports = []
   
-  # High Availability (disabled for dev)
+  # High Availability (disabled for dev2)
   multi_az = false
   
   # Security
-  deletion_protection = false  # Allow deletion in dev
-  skip_final_snapshot = true   # Skip final snapshot in dev
+  deletion_protection = false  # Allow deletion in dev2
+  skip_final_snapshot = true   # Skip final snapshot in dev2
   
-  # Performance (disabled for dev)
+  # Performance (disabled for dev2)
   performance_insights_enabled = false
   
   common_tags = var.tags
@@ -141,7 +143,7 @@ module "database" {
 module "s3_static_website" {
   source = "../../modules/s3-static-website"
   
-  bucket_name = "${var.project_name}-dev-static-website"
+  bucket_name = "${var.project_name}-dev2-static-website"
   
   # S3 Configuration
   versioning_enabled = true
@@ -162,12 +164,12 @@ module "route53" {
   source = "../../modules/route53"
   
   project_name = var.project_name
-  environment  = "dev"
+  environment = "dev2"
   
-  # Domain configuration for dev
+  # Domain configuration for dev2
   domain_name   = var.domain_name
-  app_subdomain = "dev-app"  # dev-app.nurlanskillup.pp.ua
-  api_subdomain = "dev-api"  # dev-api.nurlanskillup.pp.ua
+  app_subdomain = "dev2-app"  # dev2-app.nurlanskillup.pp.ua
+  api_subdomain = "dev2-api"  # dev2-api.nurlanskillup.pp.ua
   
   # ALB integration for API
   alb_dns_name = module.ecs.alb_dns_name
@@ -178,7 +180,7 @@ module "route53" {
   cloudfront_zone_id = module.s3_static_website.cloudfront_hosted_zone_id
   use_cloudfront_for_app = true
   
-  # Health checks (disabled for dev to save costs)
+  # Health checks (disabled for dev2 to save costs)
   enable_health_check = false
   
   aws_region = var.aws_region
@@ -189,7 +191,7 @@ module "ecs" {
   source = "../../modules/ECS"
   
   project_name = var.project_name
-  environment  = "dev"
+  environment = "dev2"
   
   # VPC Configuration
   vpc_id                   = module.networking.vpc_id
@@ -208,10 +210,10 @@ module "ecs" {
   # Container Configuration
   app_image_tag = "latest"
   app_port      = var.app_port
-  task_cpu      = 256   # Lower for dev
-  task_memory   = 512   # Lower for dev
+  task_cpu      = 256   # Lower for dev2
+  task_memory   = 512   # Lower for dev2
   
-  # Auto Scaling (minimal for dev)
+  # Auto Scaling (minimal for dev2)
   enable_autoscaling = true
   autoscaling_min_capacity = 1
   autoscaling_max_capacity = 2
@@ -227,14 +229,14 @@ module "ecs" {
   cors_origins = var.cors_origins
   health_check_path = var.health_check_path
   
-  # Monitoring (disabled for dev to save costs)
+  # Monitoring (disabled for dev2 to save costs)
   enable_container_insights = false
   enable_cloudwatch_alarms = false
   enable_cloudwatch_dashboard = false
   log_retention_days = 3
   
   # ALB Configuration
-  enable_deletion_protection = false  # Allow deletion in dev
+  enable_deletion_protection = false  # Allow deletion in dev2
   
   common_tags = var.tags
 }

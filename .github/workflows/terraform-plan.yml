@@ -6,6 +6,16 @@ on:
       - 'terraform/**'
       - '.github/workflows/terraform-*.yml'
     branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to plan'
+        required: true
+        default: 'dev2'
+        type: choice
+        options:
+          - dev2
+          - prod
 
 env:
   TF_VERSION: '1.6.0'
@@ -15,6 +25,7 @@ jobs:
   terraform-plan:
     name: 🔍 Validate & Plan
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev2' }}
     
     permissions:
       id-token: write
@@ -36,37 +47,70 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           
+      - name: 📋 Determine Environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+          else
+            ENV="dev2"  # Default for PR
+          fi
+          echo "ENVIRONMENT=$ENV" >> $GITHUB_ENV
+          echo "TF_DIR=./terraform/environments/dev" >> $GITHUB_ENV
+          echo "Planning for environment: $ENV"
+          
       - name: 📋 Terraform Format Check
         id: fmt
         run: terraform fmt -check -recursive
-        working-directory: ./terraform/environments/dev
+        working-directory: ${{ env.TF_DIR }}
         continue-on-error: true
         
       - name: ⚡ Terraform Init
         id: init
         run: terraform init
-        working-directory: ./terraform/environments/dev
+        working-directory: ${{ env.TF_DIR }}
         
       - name: ✅ Terraform Validate
         id: validate
         run: terraform validate
-        working-directory: ./terraform/environments/dev
+        working-directory: ${{ env.TF_DIR }}
         
       - name: 📊 Terraform Plan
         id: plan
         run: |
           terraform plan -no-color -out=tfplan
           terraform show -no-color tfplan > plan_output.txt
-        working-directory: ./terraform/environments/dev
+          
+          # Check if plan has changes
+          if terraform show -json tfplan | jq -e '.resource_changes | length > 0' > /dev/null; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          fi
+        working-directory: ${{ env.TF_DIR }}
         continue-on-error: true
         
-      - name: 🔒 Security Scan
+      - name: 🔒 Security Scan with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
           scan-ref: './terraform'
           format: 'sarif'
           output: 'trivy-results.sarif'
+        continue-on-error: true
+          
+      - name: 📊 Plan Summary
+        run: |
+          echo "## 🏗️ Terraform Plan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Directory:** ${{ env.TF_DIR }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- Format Check: ${{ steps.fmt.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Initialization: ${{ steps.init.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation: ${{ steps.validate.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Plan: ${{ steps.plan.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Has Changes: ${{ env.HAS_CHANGES }}" >> $GITHUB_STEP_SUMMARY
           
       - name: 📝 Comment PR
         uses: actions/github-script@v7
@@ -76,22 +120,32 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### 🏗️ Terraform Plan Results
+            const fs = require('fs');
+            let planOutput = '';
+            
+            try {
+              planOutput = fs.readFileSync('${{ env.TF_DIR }}/plan_output.txt', 'utf8');
+            } catch (error) {
+              planOutput = 'Plan output not available';
+            }
+            
+            const output = `#### 🏗️ Terraform Plan Results for ${{ env.ENVIRONMENT }}
             
             #### 📋 Format Check: \`${{ steps.fmt.outcome }}\`
             #### ⚡ Initialization: \`${{ steps.init.outcome }}\`
             #### ✅ Validation: \`${{ steps.validate.outcome }}\`
             #### 📊 Plan: \`${{ steps.plan.outcome }}\`
+            #### 🔄 Has Changes: \`${{ env.HAS_CHANGES }}\`
             
-            <details><summary>📄 Show Plan</summary>
+            <details><summary>📄 Show Plan Output</summary>
             
             \`\`\`terraform
-            ${process.env.PLAN}
+            ${planOutput}
             \`\`\`
             
             </details>
             
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Environment: \`${{ env.ENVIRONMENT }}\`*`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -99,3 +153,9 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
+            
+      - name: ❌ Fail if Issues Found
+        if: steps.fmt.outcome != 'success' || steps.init.outcome != 'success' || steps.validate.outcome != 'success' || steps.plan.outcome != 'success'
+        run: |
+          echo "❌ Terraform validation failed. Please check the logs above."
+          exit 1

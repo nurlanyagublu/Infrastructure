@@ -11,10 +11,10 @@ on:
       environment:
         description: 'Environment to deploy'
         required: true
-        default: 'dev'
+        default: 'dev2'
         type: choice
         options:
-          - dev
+          - dev2
           - prod
 
 env:
@@ -25,7 +25,7 @@ jobs:
   build-and-deploy:
     name: 🏗️ Build & Deploy Flask App
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
+    environment: ${{ github.event.inputs.environment || 'dev2' }}
     
     permissions:
       id-token: write
@@ -44,23 +44,34 @@ jobs:
       - name: 📊 Get Infrastructure Info
         id: infra
         run: |
-          ENV="${{ github.event.inputs.environment || 'dev' }}"
+          ENV="${{ github.event.inputs.environment || 'dev2' }}"
+          PROJECT_NAME="nurlan-yagublu"
           
           # Get ECR repository URI
-          ECR_URI=$(aws ecr describe-repositories --repository-names "realworld-flask-${ENV}" --query 'repositories[0].repositoryUri' --output text 2>/dev/null || echo "REPO_NOT_FOUND")
+          ECR_REPO_NAME="${PROJECT_NAME}-${ENV}-flask-api"
+          ECR_URI=$(aws ecr describe-repositories --repository-names "$ECR_REPO_NAME" --query 'repositories[0].repositoryUri' --output text 2>/dev/null || echo "REPO_NOT_FOUND")
           echo "ECR_REPOSITORY_URI=$ECR_URI" >> $GITHUB_ENV
           echo "ECR_REGISTRY=${ECR_URI%/*}" >> $GITHUB_ENV
           
           # Get ECS cluster and service names
-          ECS_CLUSTER="realworld-${ENV}"
-          ECS_SERVICE="realworld-flask-${ENV}"
+          ECS_CLUSTER="${PROJECT_NAME}-${ENV}-cluster"
+          ECS_SERVICE="${PROJECT_NAME}-${ENV}-service"
           echo "ECS_CLUSTER=$ECS_CLUSTER" >> $GITHUB_ENV
           echo "ECS_SERVICE=$ECS_SERVICE" >> $GITHUB_ENV
+          
+          # Get API domain from Route53
+          if [ "$ENV" = "dev2" ]; then
+            API_DOMAIN="dev2-api.nurlanskillup.pp.ua"
+          else
+            API_DOMAIN="api.nurlanskillup.pp.ua"
+          fi
+          echo "API_DOMAIN=$API_DOMAIN" >> $GITHUB_ENV
           
           echo "📋 Infrastructure Info:"
           echo "- ECR Repository: $ECR_URI"
           echo "- ECS Cluster: $ECS_CLUSTER"
           echo "- ECS Service: $ECS_SERVICE"
+          echo "- API Domain: $API_DOMAIN"
           
       - name: 🐳 Login to Amazon ECR
         run: |
@@ -73,7 +84,7 @@ jobs:
           # Generate build info
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           GIT_COMMIT=${GITHUB_SHA:0:7}
-          VERSION="${{ github.event.inputs.environment || 'dev' }}-${GIT_COMMIT}"
+          VERSION="${{ github.event.inputs.environment || 'dev2' }}-${GIT_COMMIT}"
           
           echo "🔨 Building Flask app..."
           echo "- Version: $VERSION"
@@ -97,16 +108,17 @@ jobs:
           
           # Start container in background
           docker run -d --name test-app \
-            -p 5000:5000 \
+            -p 8080:8080 \
             -e DATABASE_URL="sqlite:///test.db" \
             -e SECRET_KEY="test-secret" \
+            -e FLASK_RUN_PORT="8080" \
             ${{ env.ECR_REPOSITORY_URI }}:latest
           
           # Wait for app to start
-          sleep 10
+          sleep 15
           
           # Test health endpoint
-          curl -f http://localhost:5000/api/health || exit 1
+          curl -f http://localhost:8080/api/health || exit 1
           
           # Cleanup
           docker stop test-app
@@ -177,18 +189,12 @@ jobs:
           
       - name: 🔍 Verify Deployment
         run: |
-          # Get service URL from load balancer
-          ALB_DNS=$(aws elbv2 describe-load-balancers \
-            --names "realworld-${{ github.event.inputs.environment || 'dev' }}-alb" \
-            --query 'LoadBalancers[0].DNSName' \
-            --output text)
-          
-          SERVICE_URL="http://${ALB_DNS}"
+          SERVICE_URL="https://${{ env.API_DOMAIN }}"
           
           echo "🔍 Verifying deployment..."
           echo "Service URL: $SERVICE_URL"
           
-          # Wait a bit for ALB to update
+          # Wait a bit for deployment to stabilize
           sleep 30
           
           # Test health endpoint
@@ -206,7 +212,8 @@ jobs:
         run: |
           echo "## 🚀 Backend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'dev2' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**API URL:** https://${{ env.API_DOMAIN }}" >> $GITHUB_STEP_SUMMARY
           echo "**Image Tag:** ${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
           echo "**ECS Cluster:** ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
           echo "**ECS Service:** ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
