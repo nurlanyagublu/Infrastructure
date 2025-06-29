@@ -296,6 +296,8 @@ resource "aws_iam_policy" "cicd_policy" {
           "ecs:DescribeServices",
           "ecs:DescribeTaskDefinition",
           "ecs:RegisterTaskDefinition"
+          ,
+          "ec2:DescribeAvailabilityZones"
         ]
         Resource = "*"
       },

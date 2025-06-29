@@ -76,7 +76,7 @@ variable "db_storage_type" {
 variable "db_name" {
   description = "Database name"
   type        = string
-  default     = "nurlan-yagublu_dev"
+  default     = "nurlan_yagublu_dev"
 }
 
 variable "db_username" {
