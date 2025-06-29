@@ -314,7 +314,7 @@ resource "aws_iam_policy" "cicd_policy" {
         ]
         Resource = "*"
       }
-      {
+      ,{
         Effect = "Allow"
         Action = [
           "s3:GetObject",
