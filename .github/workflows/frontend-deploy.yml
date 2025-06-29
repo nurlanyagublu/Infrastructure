@@ -2,7 +2,7 @@ name: 🎨 Frontend Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'vue3-realworld-example-app/**'
       - '.github/workflows/frontend-deploy.yml'
