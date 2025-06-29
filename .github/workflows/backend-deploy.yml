@@ -2,7 +2,7 @@ name: 🐍 Backend Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'realworld-flask/**'
       - '.github/workflows/backend-deploy.yml'
