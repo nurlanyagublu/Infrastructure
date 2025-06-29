@@ -1,10 +1,4 @@
 # KMS Key for encryption
-# Local values to handle sensitive conditionals
-locals {
-  jwt_secret   = var.jwt_secret != "" ? var.jwt_secret : random_password.jwt_secret.result
-  flask_secret = var.flask_secret != "" ? var.flask_secret : random_password.flask_secret.result
-  api_key      = var.api_key != "" ? var.api_key : random_password.api_key.result
-}
 resource "aws_kms_key" "main" {
   description             = "KMS key for ${var.project_name} ${var.environment}"
   deletion_window_in_days = var.kms_deletion_window
@@ -206,9 +200,9 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 resource "aws_secretsmanager_secret_version" "app_secrets" {
   secret_id = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode({
-    jwt_secret     = local.jwt_secret
-    flask_secret   = local.flask_secret
-    api_key        = local.api_key
+    jwt_secret     = random_password.jwt_secret.result
+    flask_secret   = random_password.flask_secret.result
+    api_key        = random_password.api_key.result
     encryption_key = random_password.encryption_key.result
   })
 
