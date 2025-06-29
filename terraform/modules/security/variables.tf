@@ -21,19 +21,11 @@ variable "kms_deletion_window" {
 }
 
 # Application secrets
-variable "jwt_secret" {
-  description = "JWT secret for application (leave empty to auto-generate)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
+# Note: JWT secret is now auto-generated via random_password
+# variable "jwt_secret" removed to avoid sensitive value conflicts
 
-variable "api_key" {
-  description = "API key for external services (leave empty to auto-generate)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
+# Note: API key is now auto-generated via random_password
+# variable "api_key" removed to avoid sensitive value conflicts
 
 # Application parameters (non-sensitive configuration)
 variable "app_parameters" {
@@ -125,9 +117,5 @@ variable "additional_tags" {
   default     = {}
 }
 
-variable "flask_secret" {
-  description = "Flask secret key for application (leave empty to auto-generate)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
+# Note: Flask secret is now auto-generated via random_password
+# variable "flask_secret" removed to avoid sensitive value conflicts

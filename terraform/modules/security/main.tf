@@ -200,9 +200,9 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 resource "aws_secretsmanager_secret_version" "app_secrets" {
   secret_id = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode({
-    jwt_secret     = var.jwt_secret != "" ? var.jwt_secret : random_password.jwt_secret.result
-    flask_secret   = var.flask_secret != "" ? var.flask_secret : random_password.flask_secret.result
-    api_key        = var.api_key != "" ? var.api_key : random_password.api_key.result
+    jwt_secret     = random_password.jwt_secret.result
+    flask_secret   = random_password.flask_secret.result
+    api_key        = random_password.api_key.result
     encryption_key = random_password.encryption_key.result
   })
 
@@ -298,7 +298,6 @@ resource "aws_iam_policy" "cicd_policy" {
           "ecs:RegisterTaskDefinition"
         ]
         Resource = "*"
-      }
       },
       {
         Effect = "Allow"
@@ -315,8 +314,7 @@ resource "aws_iam_policy" "cicd_policy" {
         ]
         Resource = "*"
       }
-      },
-      {
+      ,{
         Effect = "Allow"
         Action = [
           "s3:GetObject",

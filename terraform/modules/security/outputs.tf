@@ -75,12 +75,12 @@ output "parameter_arns" {
 # Generated secrets (for reference only - actual values are stored securely)
 output "jwt_secret_generated" {
   description = "Whether JWT secret was auto-generated"
-  value       = var.jwt_secret == ""
+  value       = true  # Always auto-generated now
 }
 
 output "api_key_generated" {
   description = "Whether API key was auto-generated"
-  value       = var.api_key == ""
+  value       = true  # Always auto-generated now
 }
 
 # Security configuration summary
@@ -100,5 +100,5 @@ output "security_summary" {
 
 output "flask_secret_generated" {
   description = "Whether Flask secret was auto-generated"
-  value       = var.flask_secret == ""
+  value       = true  # Always auto-generated now
 }

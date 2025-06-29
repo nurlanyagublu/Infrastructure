@@ -47,7 +47,7 @@ jobs:
           ENV="${{ github.event.inputs.environment || 'dev' }}"
           
           # Get ECR repository URI
-          ECR_URI=$(aws ecr describe-repositories --repository-names "realworld-flask-${ENV}" --query 'repositories[0].repositoryUri' --output text)
+          ECR_URI=$(aws ecr describe-repositories --repository-names "realworld-flask-${ENV}" --query 'repositories[0].repositoryUri' --output text 2>/dev/null || echo "REPO_NOT_FOUND")
           echo "ECR_REPOSITORY_URI=$ECR_URI" >> $GITHUB_ENV
           echo "ECR_REGISTRY=${ECR_URI%/*}" >> $GITHUB_ENV
           
