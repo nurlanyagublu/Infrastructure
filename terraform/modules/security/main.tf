@@ -298,11 +298,13 @@ resource "aws_iam_policy" "cicd_policy" {
           "ecs:RegisterTaskDefinition"
         ]
         Resource = "*"
+      }
       },
       {
         Effect = "Allow"
         Action = [
           "ecr:GetAuthorizationToken",
+          "ecr:DescribeRepositories",
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
@@ -312,6 +314,7 @@ resource "aws_iam_policy" "cicd_policy" {
           "ecr:CompleteLayerUpload"
         ]
         Resource = "*"
+      }
       },
       {
         Effect = "Allow"
@@ -335,6 +338,15 @@ resource "aws_iam_policy" "cicd_policy" {
           aws_iam_role.ecs_task_execution.arn,
           aws_iam_role.ecs_task.arn
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudfront:ListDistributions",
+          "cloudfront:GetDistribution",
+          "cloudfront:CreateInvalidation"
+        ]
+        Resource = "*"
       }
     ]
   })
