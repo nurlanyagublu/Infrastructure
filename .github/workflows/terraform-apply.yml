@@ -48,25 +48,25 @@ jobs:
           
       - name: ⚡ Terraform Init
         run: terraform init
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
         
       - name: 📋 Terraform Format
         run: terraform fmt -recursive
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
         
       - name: ✅ Terraform Validate
         run: terraform validate
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
         
       - name: 📊 Terraform Plan
         id: plan
         run: |
           ENV="${{ github.event.inputs.environment || 'dev' }}"
-          terraform plan -var-file="environments/${ENV}.tfvars" -out=tfplan
+          terraform plan -out=tfplan
           terraform show -no-color tfplan > plan_output.txt
           echo "Changes detected:"
           cat plan_output.txt | grep -E "(Plan:|No changes)"
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
         
       - name: 🚀 Terraform Apply
         id: apply
@@ -79,12 +79,12 @@ jobs:
           echo "📋 Infrastructure Outputs:"
           terraform output -json > outputs.json
           cat outputs.json
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
         
       - name: 📊 Save Terraform Outputs
         run: |
           # Save outputs as artifacts for other workflows
-          cp terraform/outputs.json infrastructure-outputs.json
+          cp outputs.json infrastructure-outputs.json
           
           # Extract key values for subsequent jobs
           echo "ECS_CLUSTER_NAME=$(cat infrastructure-outputs.json | jq -r '.ecs_cluster_name.value')" >> $GITHUB_ENV

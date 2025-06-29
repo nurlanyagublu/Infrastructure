@@ -39,25 +39,25 @@ jobs:
       - name: 📋 Terraform Format Check
         id: fmt
         run: terraform fmt -check -recursive
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/dev
         continue-on-error: true
         
       - name: ⚡ Terraform Init
         id: init
         run: terraform init
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/dev
         
       - name: ✅ Terraform Validate
         id: validate
         run: terraform validate
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/dev
         
       - name: 📊 Terraform Plan
         id: plan
         run: |
-          terraform plan -var-file="environments/dev.tfvars" -no-color -out=tfplan
+          terraform plan -no-color -out=tfplan
           terraform show -no-color tfplan > plan_output.txt
-        working-directory: ./terraform
+        working-directory: ./terraform/environments/dev
         continue-on-error: true
         
       - name: 🔒 Security Scan
