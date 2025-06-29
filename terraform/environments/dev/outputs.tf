@@ -18,6 +18,7 @@ output "private_app_subnet_ids" {
 output "db_instance_endpoint" {
   description = "RDS instance endpoint"
   value       = module.database.db_instance_endpoint
+  sensitive   = true
 }
 
 output "db_instance_id" {
