@@ -114,11 +114,21 @@ jobs:
             -e FLASK_RUN_PORT="8080" \
             ${{ env.ECR_REPOSITORY_URI }}:latest
           
-          # Wait for app to start
-          sleep 15
-          
-          # Test health endpoint
-          curl -f http://localhost:8080/api/health || exit 1
+          # Wait for app to start with health check retry
+          echo "Waiting for app to start..."
+          for i in {1..30}; do
+            if curl -f http://localhost:8080/api/health 2>/dev/null; then
+              echo "✅ App is healthy after ${i} attempts"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ App failed to start after 30 attempts"
+              docker logs test-app
+              exit 1
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
           
           # Cleanup
           docker stop test-app
