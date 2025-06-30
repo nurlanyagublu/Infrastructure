@@ -216,9 +216,9 @@ resource "aws_cloudfront_distribution" "website" {
 
   # SSL Certificate
   viewer_certificate {
-    acm_certificate_arn      = var.ssl_certificate_arn
-    ssl_support_method       = var.ssl_certificate_arn != null ? "sni-only" : null
-    minimum_protocol_version = var.ssl_certificate_arn != null ? "TLSv1.2_2021" : null
+    acm_certificate_arn            = var.ssl_certificate_arn
+    ssl_support_method             = var.ssl_certificate_arn != null ? "sni-only" : null
+    minimum_protocol_version       = var.ssl_certificate_arn != null ? "TLSv1.2_2021" : null
     cloudfront_default_certificate = var.ssl_certificate_arn == null ? true : false
   }
   tags = merge(var.tags, {
@@ -236,8 +236,8 @@ resource "aws_s3_bucket_policy" "cloudfront_oac" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowCloudFrontServicePrincipal"
-        Effect    = "Allow"
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }

@@ -110,7 +110,7 @@ resource "aws_security_group" "rds" {
 # ============================================================================
 
 resource "aws_security_group" "vpc_endpoints" {
-  
+
 
   name        = "${var.project_name}-vpc-endpoints-sg"
   description = "Security group for VPC endpoints"

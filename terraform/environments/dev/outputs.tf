@@ -103,7 +103,7 @@ output "cicd_role_arn" {
 # Environment Info
 output "environment" {
   description = "Environment name"
-  value       = "dev"
+  value       = "dev2"
 }
 
 output "region" {

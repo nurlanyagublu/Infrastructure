@@ -1,7 +1,7 @@
 module "s3_static_website" {
   source = "../../modules/s3-static-website"
   
-  bucket_name = "${var.project_name}-dev-static-website"
+  bucket_name = "${var.project_name}-dev2-static-website"
   
   # S3 Configuration
   versioning_enabled = true

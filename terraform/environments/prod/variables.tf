@@ -15,13 +15,13 @@ variable "aws_region" {
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
   type        = string
-  default     = "10.1.0.0/16"  # Different CIDR for prod
+  default     = "10.1.0.0/16" # Different CIDR for prod
 }
 
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  default     = ["us-east-1a", "us-east-1b", "us-east-1c"]  # More AZs for prod
+  default     = ["us-east-1a", "us-east-1b", "us-east-1c"] # More AZs for prod
 }
 
 variable "public_subnet_cidrs" {
@@ -52,25 +52,25 @@ variable "db_engine_version" {
 variable "db_instance_class" {
   description = "Database instance class"
   type        = string
-  default     = "db.t3.small"  # Larger for production
+  default     = "db.t3.small" # Larger for production
 }
 
 variable "db_allocated_storage" {
   description = "Initial allocated storage in GB"
   type        = number
-  default     = 100  # More storage for prod
+  default     = 100 # More storage for prod
 }
 
 variable "db_max_allocated_storage" {
   description = "Maximum allocated storage in GB"
   type        = number
-  default     = 1000  # Higher limit for prod
+  default     = 1000 # Higher limit for prod
 }
 
 variable "db_storage_type" {
   description = "Storage type"
   type        = string
-  default     = "gp3"  # Better performance for prod
+  default     = "gp3" # Better performance for prod
 }
 
 variable "db_name" {
@@ -100,14 +100,14 @@ variable "backup_window" {
 variable "maintenance_window" {
   description = "Maintenance window"
   type        = string
-  default     = "sun:04:00-sun:06:00"  # Longer window for prod
+  default     = "sun:04:00-sun:06:00" # Longer window for prod
 }
 
 # ECS Configuration
 variable "app_image" {
   description = "Docker image for the application"
   type        = string
-  default     = "nginx:latest"  # Update with your production image
+  default     = "nginx:latest" # Update with your production image
 }
 
 variable "app_port" {
@@ -120,7 +120,7 @@ variable "app_port" {
 variable "domain_name" {
   description = "Domain name for the application"
   type        = string
-  default     = "example.com"  # Update with your domain
+  default     = "example.com" # Update with your domain
 }
 
 # Security Configuration
@@ -133,13 +133,13 @@ variable "enable_cicd_role" {
 variable "github_repository" {
   description = "GitHub repository in format 'owner/repo'"
   type        = string
-  default     = "youruser/yourrepo"  # Update with your repo
+  default     = "youruser/yourrepo" # Update with your repo
 }
 
 variable "github_oidc_provider_arn" {
   description = "ARN of GitHub OIDC provider"
   type        = string
-  default     = ""  # Will be created if not provided
+  default     = "" # Will be created if not provided
 }
 
 # Tags

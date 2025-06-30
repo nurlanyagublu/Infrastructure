@@ -5,17 +5,21 @@ on:
     branches: [ master ]
     paths:
       - 'terraform/**'
-      - '.github/workflows/terraform-*.yml'
   workflow_dispatch:
     inputs:
       environment:
         description: 'Environment to deploy'
         required: true
-        default: 'dev'
+        default: 'dev2'
         type: choice
         options:
-          - dev
+          - dev2
           - prod
+      auto_approve:
+        description: 'Auto approve the apply'
+        required: false
+        default: false
+        type: boolean
 
 env:
   TF_VERSION: '1.6.0'
@@ -23,9 +27,9 @@ env:
 
 jobs:
   terraform-apply:
-    name: 🏗️ Deploy Infrastructure
+    name: 🚀 Deploy Infrastructure
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
+    environment: ${{ github.event.inputs.environment || 'dev2' }}
     
     permissions:
       id-token: write
@@ -46,68 +50,162 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           
+      - name: 📋 Determine Environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+            AUTO_APPROVE="${{ github.event.inputs.auto_approve }}"
+          else
+            ENV="dev2"  # Default for push to master
+            AUTO_APPROVE="true"  # Auto approve for push events
+          fi
+          echo "ENVIRONMENT=$ENV" >> $GITHUB_ENV
+          echo "AUTO_APPROVE=$AUTO_APPROVE" >> $GITHUB_ENV
+          echo "TF_DIR=./terraform/environments/dev" >> $GITHUB_ENV
+          echo "Deploying to environment: $ENV"
+          echo "Auto approve: $AUTO_APPROVE"
+          
       - name: ⚡ Terraform Init
+        id: init
         run: terraform init
-        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
-        
-      - name: 📋 Terraform Format
-        run: terraform fmt -recursive
-        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+        working-directory: ${{ env.TF_DIR }}
         
       - name: ✅ Terraform Validate
+        id: validate
         run: terraform validate
-        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+        working-directory: ${{ env.TF_DIR }}
         
       - name: 📊 Terraform Plan
         id: plan
         run: |
-          ENV="${{ github.event.inputs.environment || 'dev' }}"
-          terraform plan -out=tfplan
+          terraform plan -no-color -out=tfplan
           terraform show -no-color tfplan > plan_output.txt
-          echo "Changes detected:"
-          cat plan_output.txt | grep -E "(Plan:|No changes)"
-        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+          
+          # Check if plan has changes
+          if terraform show -json tfplan | jq -e '.resource_changes | length > 0' > /dev/null; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            echo "✅ Changes detected in plan"
+          else
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            echo "ℹ️  No changes detected in plan"
+          fi
+        working-directory: ${{ env.TF_DIR }}
         
       - name: 🚀 Terraform Apply
         id: apply
+        if: env.HAS_CHANGES == 'true'
         run: |
-          ENV="${{ github.event.inputs.environment || 'dev' }}"
-          echo "🌍 Deploying to: ${ENV}"
-          terraform apply -auto-approve tfplan
-          
-          # Output important values
-          echo "📋 Infrastructure Outputs:"
-          terraform output -json > outputs.json
-          cat outputs.json
-        working-directory: ./terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+          if [ "${{ env.AUTO_APPROVE }}" = "true" ]; then
+            echo "🚀 Applying changes automatically..."
+            terraform apply -auto-approve tfplan
+          else
+            echo "📋 Plan created but auto-approve is disabled"
+            echo "To apply manually, run:"
+            echo "terraform apply tfplan"
+            exit 0
+          fi
+        working-directory: ${{ env.TF_DIR }}
         
-      - name: 📊 Save Terraform Outputs
+      - name: 📊 Get Infrastructure Outputs
+        id: outputs
+        if: steps.apply.outcome == 'success'
         run: |
-          # Save outputs as artifacts for other workflows
-          cp outputs.json infrastructure-outputs.json
+          echo "📊 Getting infrastructure outputs..."
           
-          # Extract key values for subsequent jobs
-          echo "ECS_CLUSTER_NAME=$(cat infrastructure-outputs.json | jq -r '.ecs_cluster_name.value')" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY_URI=$(cat infrastructure-outputs.json | jq -r '.ecr_repository_uri.value')" >> $GITHUB_ENV
-          echo "S3_BUCKET_NAME=$(cat infrastructure-outputs.json | jq -r '.s3_bucket_name.value')" >> $GITHUB_ENV
-          echo "CLOUDFRONT_DISTRIBUTION_ID=$(cat infrastructure-outputs.json | jq -r '.cloudfront_distribution_id.value')" >> $GITHUB_ENV
+          # Get key outputs
+          API_URL=$(terraform output -raw api_fqdn 2>/dev/null || echo "Not available")
+          APP_URL=$(terraform output -raw app_fqdn 2>/dev/null || echo "Not available")
+          ALB_DNS=$(terraform output -raw alb_dns_name 2>/dev/null || echo "Not available")
+          S3_BUCKET=$(terraform output -raw s3_bucket_id 2>/dev/null || echo "Not available")
+          CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "Not available")
+          ECR_REPO=$(terraform output -raw ecr_repository_name 2>/dev/null || echo "Not available")
+          ECS_CLUSTER=$(terraform output -raw ecs_ecs_cluster_id 2>/dev/null | cut -d'/' -f2 || echo "Not available")
+          ECS_SERVICE=$(terraform output -raw ecs_ecs_service_name 2>/dev/null || echo "Not available")
           
-      - name: 📦 Upload Infrastructure Outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: infrastructure-outputs-${{ github.event.inputs.environment || 'dev' }}
-          path: infrastructure-outputs.json
-          retention-days: 30
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+          echo "APP_URL=$APP_URL" >> $GITHUB_ENV
+          echo "ALB_DNS=$ALB_DNS" >> $GITHUB_ENV
+          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
+          echo "CLOUDFRONT_ID=$CLOUDFRONT_ID" >> $GITHUB_ENV
+          echo "ECR_REPO=$ECR_REPO" >> $GITHUB_ENV
+          echo "ECS_CLUSTER=$ECS_CLUSTER" >> $GITHUB_ENV
+          echo "ECS_SERVICE=$ECS_SERVICE" >> $GITHUB_ENV
+        working-directory: ${{ env.TF_DIR }}
+        
+      - name: 🔍 Verify Infrastructure
+        if: steps.apply.outcome == 'success'
+        run: |
+          echo "🔍 Verifying infrastructure..."
+          
+          # Check if ALB is accessible (if available)
+          if [ "${{ env.ALB_DNS }}" != "Not available" ]; then
+            echo "Testing ALB connectivity..."
+            for i in {1..3}; do
+              if curl -s -o /dev/null -w "%{http_code}" "http://${{ env.ALB_DNS }}/api/health" | grep -q "200\|404"; then
+                echo "✅ ALB is accessible"
+                break
+              else
+                echo "⏳ ALB check attempt $i failed, retrying..."
+                sleep 10
+              fi
+            done
+          fi
+          
+          # Check if S3 bucket exists
+          if [ "${{ env.S3_BUCKET }}" != "Not available" ]; then
+            if aws s3 ls "s3://${{ env.S3_BUCKET }}" > /dev/null 2>&1; then
+              echo "✅ S3 bucket is accessible"
+            else
+              echo "⚠️ S3 bucket check failed"
+            fi
+          fi
           
       - name: ✅ Deployment Summary
         run: |
-          echo "## 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Infrastructure Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Terraform Directory:** ${{ env.TF_DIR }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Auto Approved:** ${{ env.AUTO_APPROVE }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Changes Applied:** ${{ env.HAS_CHANGES }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Infrastructure Resources:" >> $GITHUB_STEP_SUMMARY
-          echo "- **ECS Cluster:** $ECS_CLUSTER_NAME" >> $GITHUB_STEP_SUMMARY
-          echo "- **ECR Repository:** $ECR_REPOSITORY_URI" >> $GITHUB_STEP_SUMMARY
-          echo "- **S3 Bucket:** $S3_BUCKET_NAME" >> $GITHUB_STEP_SUMMARY
-          echo "- **CloudFront:** $CLOUDFRONT_DISTRIBUTION_ID" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.apply.outcome }}" = "success" ]; then
+            echo "### 🎯 Infrastructure Endpoints:" >> $GITHUB_STEP_SUMMARY
+            echo "- **API URL:** https://${{ env.API_URL }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **App URL:** https://${{ env.APP_URL }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **ALB DNS:** ${{ env.ALB_DNS }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔧 AWS Resources:" >> $GITHUB_STEP_SUMMARY
+            echo "- **S3 Bucket:** ${{ env.S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **CloudFront Distribution:** ${{ env.CLOUDFRONT_ID }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **ECR Repository:** ${{ env.ECR_REPO }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **ECS Cluster:** ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **ECS Service:** ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔗 Quick Links:" >> $GITHUB_STEP_SUMMARY
+            echo "- [API Health Check](https://${{ env.API_URL }}/api/health)" >> $GITHUB_STEP_SUMMARY
+            echo "- [Frontend App](https://${{ env.APP_URL }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ℹ️ Deployment Status:" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ env.HAS_CHANGES }}" = "false" ]; then
+              echo "- No changes detected in Terraform plan" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Changes detected but apply was skipped (auto-approve disabled)" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+      - name: ❌ Handle Failures
+        if: failure()
+        run: |
+          echo "## ❌ Infrastructure Deployment Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Step that failed:** Check the logs above" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Troubleshooting:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check the Terraform logs in the failed step" >> $GITHUB_STEP_SUMMARY
+          echo "2. Verify AWS credentials and permissions" >> $GITHUB_STEP_SUMMARY
+          echo "3. Ensure all required variables are set" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check for resource conflicts or dependencies" >> $GITHUB_STEP_SUMMARY

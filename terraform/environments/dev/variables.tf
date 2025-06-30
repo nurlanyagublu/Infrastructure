@@ -76,7 +76,7 @@ variable "db_storage_type" {
 variable "db_name" {
   description = "Database name"
   type        = string
-  default     = "nurlan_yagublu_dev"
+  default     = "nurlan_yagublu_dev2"
 }
 
 variable "db_username" {
@@ -101,20 +101,20 @@ variable "maintenance_window" {
 variable "app_image" {
   description = "Docker image for the application"
   type        = string
-  default     = "nginx:latest"  # Default image for testing
+  default     = "nginx:latest" # Default image for testing
 }
 
 variable "app_port" {
   description = "Port the application runs on"
   type        = number
-  default     = 80
+  default     = 8080
 }
 
 # Domain Configuration
 variable "domain_name" {
   description = "Domain name for the application"
   type        = string
-  default     = "example.com"  # Update with your domain
+  default     = "nurlanskillup.pp.ua" # Update with your domain
 }
 
 # Security Configuration
@@ -127,13 +127,13 @@ variable "enable_cicd_role" {
 variable "github_repository" {
   description = "GitHub repository in format 'owner/repo'"
   type        = string
-  default     = "nurlanyagublu/infrastructure"  # Update with your repo
+  default     = "nurlanyagublu/infrastructure" # Update with your repo
 }
 
 variable "github_oidc_provider_arn" {
   description = "ARN of GitHub OIDC provider"
   type        = string
-  default     = ""  # Will be created if not provided
+  default     = "arn:aws:iam::253650698585:oidc-provider/token.actions.githubusercontent.com" # Will be created if not provided
 }
 
 # Application Configuration Variables
@@ -154,9 +154,9 @@ variable "tags" {
   description = "Additional tags for all resources"
   type        = map(string)
   default = {
-    Environment = "dev"
+    Environment = "dev2"
     Project     = "nurlan-yagublu"
-    Owner       = "Nurlan-Dev"
+    owner       = "nurlan.yagublu@nixs.com"
     CostCenter  = "development"
   }
 }
