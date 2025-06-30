@@ -170,5 +170,10 @@ jobs:
       - name: ❌ Fail if Issues Found
         if: steps.fmt.outcome != 'success' || steps.init.outcome != 'success' || steps.validate.outcome != 'success' || steps.plan.outcome != 'success'
         run: |
+          echo "Step outcomes:"
+          echo "- Format Check: ${{ steps.fmt.outcome }}"
+          echo "- Initialization: ${{ steps.init.outcome }}"
+          echo "- Validation: ${{ steps.validate.outcome }}"
+          echo "- Plan: ${{ steps.plan.outcome }}"
           echo "❌ Terraform validation failed. Please check the logs above."
           exit 1
