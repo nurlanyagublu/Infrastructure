@@ -107,12 +107,21 @@ jobs:
           echo "🧪 Testing Docker image..."
           
           # Start container in background
+          echo "Starting container with debug output..."
           docker run -d --name test-app \
             -p 8080:8080 \
-            -e DATABASE_URL="sqlite:///test.db" \
+            -e DATABASE_URL="sqlite:///tmp/test.db" -e INIT_DB="true" \
             -e SECRET_KEY="test-secret" \
             -e FLASK_RUN_PORT="8080" \
+            -e FLASK_DEBUG="true" \
             ${{ env.ECR_REPOSITORY_URI }}:latest
+          
+          echo "Container started, checking logs..."
+          sleep 5
+          docker logs test-app
+          echo "Checking if container is running..."
+          docker ps | grep test-app || echo "Container not running"
+          
           
           # Wait for app to start with health check retry
           echo "Waiting for app to start..."
