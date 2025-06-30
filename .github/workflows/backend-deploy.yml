@@ -62,6 +62,9 @@ jobs:
           # Get API domain from Route53
           if [ "$ENV" = "dev2" ]; then
             API_DOMAIN="dev2-api.nurlanskillup.pp.ua"
+          else
+            API_DOMAIN="api.nurlanskillup.pp.ua"
+          fi
           echo "API_DOMAIN=$API_DOMAIN" >> $GITHUB_ENV
           
           echo "📋 Infrastructure Info:"
