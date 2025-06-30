@@ -206,9 +206,24 @@ jobs:
           
           # Test health endpoint
           for i in {1..5}; do
-            if curl -f "${SERVICE_URL}/api/health"; then
+            echo "Attempt $i of 5..."
+            if curl -f -s "${SERVICE_URL}/api/health" > /dev/null; then
               echo "✅ Health check passed!"
+              
+              # Test ping endpoint as well
+              if curl -f -s "${SERVICE_URL}/api/ping" > /dev/null; then
+                echo "✅ Ping endpoint working!"
+              fi
               break
+            else
+              echo "⏳ Health check failed, retrying in 15 seconds..."
+              sleep 15
+            fi
+            
+            if [ "$i" -eq 5 ]; then
+              echo "❌ Health check failed after 5 attempts"
+              exit 1
+            fi
           done
           
       - name: ✅ Deployment Summary
@@ -224,3 +239,7 @@ jobs:
           echo "### 📊 Deployment Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Task Definition:** ${{ env.NEW_TASK_DEFINITION_ARN }}" >> $GITHUB_STEP_SUMMARY
           echo "- **ECR Image:** ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Quick Links:" >> $GITHUB_STEP_SUMMARY
+          echo "- [API Health Check](https://${{ env.API_DOMAIN }}/api/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- [API Ping](https://${{ env.API_DOMAIN }}/api/ping)" >> $GITHUB_STEP_SUMMARY
