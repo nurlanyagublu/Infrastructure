@@ -78,8 +78,10 @@ jobs:
       - name: 📊 Terraform Plan
         id: plan
         run: |
-          terraform plan -no-color -out=tfplan
-          terraform show -no-color tfplan > plan_output.txt
+          terraform plan -no-color -compact-warnings -out=tfplan
+          terraform show -no-color tfplan > plan_output_full.txt
+          head -n 5000 plan_output_full.txt > plan_output.txt
+          echo "Plan output truncated for display" >> plan_output.txt
           
           # Check if plan has changes
           if terraform show -json tfplan | jq -e '.resource_changes | length > 0' > /dev/null; then
@@ -115,18 +117,25 @@ jobs:
       - name: 📝 Comment PR
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            let planOutput = '';
+            let planOutput = 'Plan output not available';
+            const maxSize = 40000; // 40KB limit for GitHub comments
             
             try {
-              planOutput = fs.readFileSync('${{ env.TF_DIR }}/plan_output.txt', 'utf8');
+              const fullOutput = fs.readFileSync('${{ env.TF_DIR }}/plan_output.txt', 'utf8');
+              if (fullOutput.length > maxSize) {
+                planOutput = fullOutput.substring(0, maxSize) + '\n\n... (output truncated due to size limits)';
+              } else {
+                planOutput = fullOutput;
+              }
+              // Remove any potentially problematic characters
+              planOutput = planOutput.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
             } catch (error) {
-              planOutput = 'Plan output not available';
+              console.log('Error reading plan output:', error.message);
+              planOutput = `Could not read plan output: ${error.message}`;
             }
             
             const output = `#### 🏗️ Terraform Plan Results for ${{ env.ENVIRONMENT }}
@@ -140,20 +149,24 @@ jobs:
             <details><summary>📄 Show Plan Output</summary>
             
             \`\`\`terraform
-            ${planOutput}
+            ${planOutput.substring(0, 30000)}
             \`\`\`
             
             </details>
             
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Environment: \`${{ env.ENVIRONMENT }}\`*`;
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-            
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            } catch (error) {
+              console.log('Failed to create comment:', error.message);
+              // Don't fail the workflow if comment creation fails
+            }
       - name: ❌ Fail if Issues Found
         if: steps.fmt.outcome != 'success' || steps.init.outcome != 'success' || steps.validate.outcome != 'success' || steps.plan.outcome != 'success'
         run: |
