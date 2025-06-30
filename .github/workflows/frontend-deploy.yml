@@ -84,7 +84,7 @@ jobs:
           cd vue3-realworld-example-app
           
           echo "📦 Installing npm dependencies..."
-          npm ci
+          npm install --legacy-peer-deps
           
           echo "✅ Dependencies installed successfully!"
           
