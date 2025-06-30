@@ -112,7 +112,7 @@ jobs:
             -e FLASK_ENV="test" \
             -e SKIP_DB_INIT="true" \
             ${{ env.ECR_REPOSITORY_URI }}:latest \
-            bash -c "echo Flask container started successfully && sleep 30"
+            sleep 30
           
           # Wait and check if container is running
           sleep 5
