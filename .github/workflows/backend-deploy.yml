@@ -62,9 +62,6 @@ jobs:
           # Get API domain from Route53
           if [ "$ENV" = "dev2" ]; then
             API_DOMAIN="dev2-api.nurlanskillup.pp.ua"
-          else
-            API_DOMAIN="api.nurlanskillup.pp.ua"
-          fi
           echo "API_DOMAIN=$API_DOMAIN" >> $GITHUB_ENV
           
           echo "📋 Infrastructure Info:"
@@ -125,11 +122,6 @@ jobs:
             echo "❌ Container failed to start"
             docker logs test-app
             exit 1
-          fi
-          else
-            echo "❌ Flask process not running"
-            echo "Full container logs:"
-            docker logs test-app
           fi
           
           # Cleanup
@@ -214,10 +206,6 @@ jobs:
             if curl -f "${SERVICE_URL}/api/health"; then
               echo "✅ Health check passed!"
               break
-            else
-              echo "⏳ Attempt $i failed, retrying in 10s..."
-              sleep 10
-            fi
           done
           
       - name: ✅ Deployment Summary
