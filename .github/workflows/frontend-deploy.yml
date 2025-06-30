@@ -40,7 +40,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: vue3-realworld-example-app/package-lock.json
           
       - name: 🔑 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
