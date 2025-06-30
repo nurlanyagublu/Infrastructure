@@ -130,7 +130,7 @@ jobs:
       - name: 📦 Install Frontend Dependencies
         run: |
           cd vue3-realworld-example-app
-          npm ci
+          npm install --legacy-peer-deps
           
       - name: 📦 Install Backend Dependencies
         run: |
