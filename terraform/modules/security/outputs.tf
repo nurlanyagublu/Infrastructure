@@ -75,22 +75,22 @@ output "parameter_arns" {
 # Generated secrets (for reference only - actual values are stored securely)
 output "jwt_secret_generated" {
   description = "Whether JWT secret was auto-generated"
-  value       = true  # Always auto-generated now
+  value       = true # Always auto-generated now
 }
 
 output "api_key_generated" {
   description = "Whether API key was auto-generated"
-  value       = true  # Always auto-generated now
+  value       = true # Always auto-generated now
 }
 
 # Security configuration summary
 output "security_summary" {
   description = "Summary of security resources created"
   value = {
-    kms_key_created           = true
-    ecs_roles_created         = true
-    secrets_manager_created   = true
-    parameter_store_created   = true
+    kms_key_created          = true
+    ecs_roles_created        = true
+    secrets_manager_created  = true
+    parameter_store_created  = true
     cicd_role_created        = var.enable_cicd_role
     secret_rotation_enabled  = var.enable_secret_rotation
     parameters_count         = length(var.app_parameters)
@@ -100,5 +100,5 @@ output "security_summary" {
 
 output "flask_secret_generated" {
   description = "Whether Flask secret was auto-generated"
-  value       = true  # Always auto-generated now
+  value       = true # Always auto-generated now
 }

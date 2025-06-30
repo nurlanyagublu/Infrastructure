@@ -101,7 +101,7 @@ variable "maintenance_window" {
 variable "app_image" {
   description = "Docker image for the application"
   type        = string
-  default     = "nginx:latest"  # Default image for testing
+  default     = "nginx:latest" # Default image for testing
 }
 
 variable "app_port" {
@@ -114,7 +114,7 @@ variable "app_port" {
 variable "domain_name" {
   description = "Domain name for the application"
   type        = string
-  default     = "nurlanskillup.pp.ua"  # Update with your domain
+  default     = "nurlanskillup.pp.ua" # Update with your domain
 }
 
 # Security Configuration
@@ -127,13 +127,13 @@ variable "enable_cicd_role" {
 variable "github_repository" {
   description = "GitHub repository in format 'owner/repo'"
   type        = string
-  default     = "nurlanyagublu/infrastructure"  # Update with your repo
+  default     = "nurlanyagublu/infrastructure" # Update with your repo
 }
 
 variable "github_oidc_provider_arn" {
   description = "ARN of GitHub OIDC provider"
   type        = string
-  default = "arn:aws:iam::253650698585:oidc-provider/token.actions.githubusercontent.com"  # Will be created if not provided
+  default     = "arn:aws:iam::253650698585:oidc-provider/token.actions.githubusercontent.com" # Will be created if not provided
 }
 
 # Application Configuration Variables

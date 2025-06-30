@@ -236,9 +236,9 @@ resource "random_password" "encryption_key" {
 resource "aws_ssm_parameter" "app_config" {
   for_each = var.app_parameters
 
-  name  = "/${var.project_name}/${var.environment}/${each.key}"
-  type  = each.value.secure ? "SecureString" : "String"
-  value = each.value.value
+  name   = "/${var.project_name}/${var.environment}/${each.key}"
+  type   = each.value.secure ? "SecureString" : "String"
+  value  = each.value.value
   key_id = each.value.secure ? aws_kms_key.main.arn : null
 
   tags = {
@@ -316,7 +316,7 @@ resource "aws_iam_policy" "cicd_policy" {
         ]
         Resource = "*"
       }
-      ,{
+      , {
         Effect = "Allow"
         Action = [
           "s3:GetObject",

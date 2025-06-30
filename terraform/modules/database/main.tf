@@ -25,7 +25,7 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 resource "aws_secretsmanager_secret_version" "db_credentials" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
-    username               = "pgadmin"
+    username = "pgadmin"
     password = random_password.db_password.result
     host     = split(":", aws_db_instance.main.endpoint)[0]
     port     = aws_db_instance.main.port
@@ -62,7 +62,7 @@ resource "aws_db_parameter_group" "main" {
   parameter {
     name         = "shared_preload_libraries"
     value        = "pg_stat_statements"
-    apply_method = "pending-reboot"  # Static parameter requires restart
+    apply_method = "pending-reboot" # Static parameter requires restart
   }
 
   parameter {
@@ -80,7 +80,7 @@ resource "aws_db_parameter_group" "main" {
   parameter {
     name         = "max_connections"
     value        = var.max_connections
-    apply_method = "pending-reboot"  # Usually requires restart
+    apply_method = "pending-reboot" # Usually requires restart
   }
 
   tags = merge(var.common_tags, {
@@ -97,12 +97,12 @@ resource "aws_db_instance" "main" {
   # Basic Configuration
   identifier     = "${var.project_name}-${var.environment}-postgres"
   engine         = "postgres"
-  engine_version        = "15.8"
+  engine_version = "15.8"
   instance_class = var.db_instance_class
 
   # Database Configuration
   db_name  = var.db_name
-  username               = "pgadmin"
+  username = "pgadmin"
   password = random_password.db_password.result
   port     = 5432
 

@@ -255,8 +255,8 @@ resource "aws_ecs_task_definition" "app" {
   family                   = "${var.project_name}-${var.environment}-flask-api"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 256  # Cost optimized: 0.25 vCPU
-  memory                   = 512  # Cost optimized: 512 MB
+  cpu                      = 256 # Cost optimized: 0.25 vCPU
+  memory                   = 512 # Cost optimized: 512 MB
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 

@@ -93,13 +93,13 @@ resource "aws_route53_record" "www" {
 
 # Health check for the main application
 resource "aws_route53_health_check" "app" {
-  count                           = var.enable_health_check ? 1 : 0
-  fqdn                           = var.app_subdomain != "" ? "${var.app_subdomain}.${var.domain_name}" : var.domain_name
-  port                           = 443
-  type                           = "HTTPS"
-  resource_path                  = var.health_check_path
-  failure_threshold              = 3
-  request_interval               = 30
+  count             = var.enable_health_check ? 1 : 0
+  fqdn              = var.app_subdomain != "" ? "${var.app_subdomain}.${var.domain_name}" : var.domain_name
+  port              = 443
+  type              = "HTTPS"
+  resource_path     = var.health_check_path
+  failure_threshold = 3
+  request_interval  = 30
 
   tags = {
     Name        = "${var.project_name}-health-check"
