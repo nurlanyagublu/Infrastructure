@@ -1,4 +1,4 @@
-name: 🐍 Backend Deploy
+name: Backend Deploy
 
 on:
   push:
@@ -23,7 +23,7 @@ env:
 
 jobs:
   build-and-deploy:
-    name: 🏗️ Build & Deploy Flask App
+    name: Build & Deploy Flask App
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev2' }}
     
@@ -32,16 +32,16 @@ jobs:
       contents: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🔑 Configure AWS Credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           
-      - name: 📊 Get Infrastructure Info
+      - name: Get Infrastructure Info
         id: infra
         run: |
           ENV="${{ github.event.inputs.environment || 'dev2' }}"
@@ -67,17 +67,17 @@ jobs:
           fi
           echo "API_DOMAIN=$API_DOMAIN" >> $GITHUB_ENV
           
-          echo "📋 Infrastructure Info:"
+          echo " Infrastructure Info:"
           echo "- ECR Repository: $ECR_URI"
           echo "- ECS Cluster: $ECS_CLUSTER"
           echo "- ECS Service: $ECS_SERVICE"
           echo "- API Domain: $API_DOMAIN"
           
-      - name: 🐳 Login to Amazon ECR
+      - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
           
-      - name: 🏗️ Build Docker Image
+      - name: Build Docker Image
         run: |
           cd realworld-flask
           
@@ -86,7 +86,7 @@ jobs:
           GIT_COMMIT=${GITHUB_SHA:0:7}
           VERSION="${{ github.event.inputs.environment || 'dev2' }}-${GIT_COMMIT}"
           
-          echo "🔨 Building Flask app..."
+          echo " Building Flask app..."
           echo "- Version: $VERSION"
           echo "- Commit: $GIT_COMMIT"
           echo "- Date: $BUILD_DATE"
@@ -102,9 +102,9 @@ jobs:
           
           echo "IMAGE_TAG=$VERSION" >> $GITHUB_ENV
           
-      - name: 🧪 Test Docker Image
+      - name: Test Docker Image
         run: |
-          echo "🧪 Testing Docker image..."
+          echo "Testing Docker image..."
           
           # Simple container test - just check if it builds and runs
           echo "Testing if container starts without database dependency..."
@@ -120,9 +120,9 @@ jobs:
           # Wait and check if container is running
           sleep 5
           if docker ps | grep test-app; then
-            echo "✅ Container started successfully"
+            echo "Container started successfully"
           else
-            echo "❌ Container failed to start"
+            echo "Container failed to start"
             docker logs test-app
             exit 1
           fi
@@ -131,17 +131,17 @@ jobs:
           docker stop test-app
           docker rm test-app
           
-          echo "✅ Docker image tests passed!"
+          echo "Docker image tests passed!"
           
-      - name: 📤 Push to ECR
+      - name: Push to ECR
         run: |
-          echo "📤 Pushing images to ECR..."
+          echo "Pushing images to ECR..."
           docker push ${{ env.ECR_REPOSITORY_URI }}:latest
           docker push ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
           
-          echo "✅ Images pushed successfully!"
+          echo "Images pushed successfully!"
           
-      - name: 📋 Update ECS Task Definition
+      - name: Update ECS Task Definition
         id: task-def
         run: |
           # Get current task definition
@@ -172,11 +172,11 @@ jobs:
             --output text)
           
           echo "NEW_TASK_DEFINITION_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
-          echo "✅ New task definition registered: $NEW_TASK_DEF_ARN"
+          echo "New task definition registered: $NEW_TASK_DEF_ARN"
           
-      - name: 🚀 Deploy to ECS
+      - name: Deploy to ECS
         run: |
-          echo "🚀 Deploying to ECS..."
+          echo "Deploying to ECS..."
           
           # Update service with new task definition
           aws ecs update-service \
@@ -185,20 +185,20 @@ jobs:
             --task-definition ${{ env.NEW_TASK_DEFINITION_ARN }} \
             --force-new-deployment
           
-          echo "⏳ Waiting for deployment to complete..."
+          echo "Waiting for deployment to complete..."
           
           # Wait for service to be stable
           aws ecs wait services-stable \
             --cluster ${{ env.ECS_CLUSTER }} \
             --services ${{ env.ECS_SERVICE }}
           
-          echo "✅ ECS deployment completed successfully!"
+          echo "ECS deployment completed successfully!"
           
-      - name: 🔍 Verify Deployment
+      - name: Verify Deployment
         run: |
           SERVICE_URL="https://${{ env.API_DOMAIN }}"
           
-          echo "🔍 Verifying deployment..."
+          echo "Verifying deployment..."
           echo "Service URL: $SERVICE_URL"
           
           # Wait a bit for deployment to stabilize
@@ -208,27 +208,27 @@ jobs:
           for i in {1..5}; do
             echo "Attempt $i of 5..."
             if curl -f -s "${SERVICE_URL}/api/health" > /dev/null; then
-              echo "✅ Health check passed!"
+              echo "Health check passed!"
               
               # Test ping endpoint as well
               if curl -f -s "${SERVICE_URL}/api/ping" > /dev/null; then
-                echo "✅ Ping endpoint working!"
+                echo "Ping endpoint working!"
               fi
               break
             else
-              echo "⏳ Health check failed, retrying in 15 seconds..."
+              echo "Health check failed, retrying in 15 seconds..."
               sleep 15
             fi
             
             if [ "$i" -eq 5 ]; then
-              echo "❌ Health check failed after 5 attempts"
+              echo "Health check failed after 5 attempts"
               exit 1
             fi
           done
           
-      - name: ✅ Deployment Summary
+      - name: Deployment Summary
         run: |
-          echo "## 🚀 Backend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "## Backend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ github.event.inputs.environment || 'dev2' }}" >> $GITHUB_STEP_SUMMARY
           echo "**API URL:** https://${{ env.API_DOMAIN }}" >> $GITHUB_STEP_SUMMARY
@@ -236,10 +236,10 @@ jobs:
           echo "**ECS Cluster:** ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
           echo "**ECS Service:** ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Deployment Details:" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Task Definition:** ${{ env.NEW_TASK_DEFINITION_ARN }}" >> $GITHUB_STEP_SUMMARY
           echo "- **ECR Image:** ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 Quick Links:" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Links:" >> $GITHUB_STEP_SUMMARY
           echo "- [API Health Check](https://${{ env.API_DOMAIN }}/api/health)" >> $GITHUB_STEP_SUMMARY
           echo "- [API Ping](https://${{ env.API_DOMAIN }}/api/ping)" >> $GITHUB_STEP_SUMMARY
