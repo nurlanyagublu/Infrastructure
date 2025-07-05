@@ -1,4 +1,4 @@
-name: 🏗️ Terraform Plan
+name: Terraform Plan
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ env:
 
 jobs:
   terraform-plan:
-    name: 🔍 Validate & Plan
+    name: Validate & Plan
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev2' }}
     
@@ -33,21 +33,21 @@ jobs:
       pull-requests: write
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🔧 Setup Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
           
-      - name: 🔑 Configure AWS Credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           
-      - name: 📋 Determine Environment
+      - name: Determine Environment
         id: env
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -59,23 +59,23 @@ jobs:
           echo "TF_DIR=./terraform/environments/dev" >> $GITHUB_ENV
           echo "Planning for environment: $ENV"
           
-      - name: 📋 Terraform Format Check
+      - name: Terraform Format Check
         id: fmt
         run: terraform fmt -check -recursive
         working-directory: ${{ env.TF_DIR }}
         continue-on-error: true
         
-      - name: ⚡ Terraform Init
+      - name: Terraform Init
         id: init
         run: terraform init
         working-directory: ${{ env.TF_DIR }}
         
-      - name: ✅ Terraform Validate
+      - name: Terraform Validate
         id: validate
         run: terraform validate
         working-directory: ${{ env.TF_DIR }}
         
-      - name: 📊 Terraform Plan
+      - name: Terraform Plan
         id: plan
         run: |
           terraform plan -no-color -compact-warnings -out=tfplan
@@ -92,7 +92,7 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         continue-on-error: true
         
-      - name: 🔒 Security Scan with Trivy
+      - name: Security Scan with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
@@ -101,9 +101,9 @@ jobs:
           output: 'trivy-results.sarif'
         continue-on-error: true
           
-      - name: 📊 Plan Summary
+      - name: Plan Summary
         run: |
-          echo "## 🏗️ Terraform Plan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Terraform Plan Summary" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
           echo "**Directory:** ${{ env.TF_DIR }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -114,7 +114,7 @@ jobs:
           echo "- Plan: ${{ steps.plan.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "- Has Changes: ${{ env.HAS_CHANGES }}" >> $GITHUB_STEP_SUMMARY
           
-      - name: 📝 Comment PR
+      - name: Comment PR
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
         with:
@@ -138,15 +138,15 @@ jobs:
               planOutput = `Could not read plan output: ${error.message}`;
             }
             
-            const output = `#### 🏗️ Terraform Plan Results for ${{ env.ENVIRONMENT }}
+            const output = `#### Terraform Plan Results for ${{ env.ENVIRONMENT }}
             
-            #### 📋 Format Check: \`${{ steps.fmt.outcome }}\`
-            #### ⚡ Initialization: \`${{ steps.init.outcome }}\`
-            #### ✅ Validation: \`${{ steps.validate.outcome }}\`
-            #### 📊 Plan: \`${{ steps.plan.outcome }}\`
-            #### 🔄 Has Changes: \`${{ env.HAS_CHANGES }}\`
+            #### Format Check: \`${{ steps.fmt.outcome }}\`
+            #### Initialization: \`${{ steps.init.outcome }}\`
+            #### Validation: \`${{ steps.validate.outcome }}\`
+            #### Plan: \`${{ steps.plan.outcome }}\`
+            #### Has Changes: \`${{ env.HAS_CHANGES }}\`
             
-            <details><summary>📄 Show Plan Output</summary>
+            <details><summary> Show Plan Output</summary>
             
             \`\`\`terraform
             ${planOutput.substring(0, 30000)}
@@ -167,7 +167,7 @@ jobs:
               console.log('Failed to create comment:', error.message);
               // Don't fail the workflow if comment creation fails
             }
-      - name: ❌ Fail if Issues Found
+      - name: Fail if Issues Found
         if: steps.fmt.outcome != 'success' || steps.init.outcome != 'success' || steps.validate.outcome != 'success' || steps.plan.outcome != 'success'
         run: |
           echo "Step outcomes:"
@@ -175,5 +175,5 @@ jobs:
           echo "- Initialization: ${{ steps.init.outcome }}"
           echo "- Validation: ${{ steps.validate.outcome }}"
           echo "- Plan: ${{ steps.plan.outcome }}"
-          echo "❌ Terraform validation failed. Please check the logs above."
+          echo " Terraform validation failed. Please check the logs above."
           exit 1
