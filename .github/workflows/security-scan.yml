@@ -1,4 +1,4 @@
-name: 🔒 Security Scan
+name: Security Scan
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   code-scan:
-    name: 🔍 Code Security Scan
+    name: Code Security Scan
     runs-on: ubuntu-latest
     
     permissions:
@@ -24,10 +24,10 @@ jobs:
       actions: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🔒 Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -36,14 +36,14 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           
-      - name: 📤 Upload Trivy scan results to GitHub Security tab
+      - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
           
   docker-scan:
-    name: 🐳 Docker Security Scan
+    name: Docker Security Scan
     runs-on: ubuntu-latest
     if: github.event_name != 'schedule'
     
@@ -52,15 +52,15 @@ jobs:
       contents: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🏗️ Build Flask Docker Image
+      - name:  Build Flask Docker Image
         run: |
           cd realworld-flask
           docker build -t flask-app:scan .
           
-      - name: 🔒 Run Trivy vulnerability scanner on Flask image
+      - name: Run Trivy vulnerability scanner on Flask image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'flask-app:scan'
@@ -68,7 +68,7 @@ jobs:
           output: 'trivy-flask-results.sarif'
           severity: 'CRITICAL,HIGH'
           
-      - name: 📤 Upload Flask Docker scan results
+      - name: Upload Flask Docker scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
@@ -76,7 +76,7 @@ jobs:
           category: 'docker-flask'
           
   terraform-scan:
-    name: 🏗️ Terraform Security Scan
+    name: Terraform Security Scan
     runs-on: ubuntu-latest
     
     permissions:
@@ -84,10 +84,10 @@ jobs:
       contents: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🔒 Run Trivy on Terraform configs
+      - name: Run Trivy on Terraform configs
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
@@ -96,7 +96,7 @@ jobs:
           output: 'trivy-terraform-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           
-      - name: 📤 Upload Terraform scan results
+      - name: Upload Terraform scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
@@ -104,7 +104,7 @@ jobs:
           category: 'terraform'
           
   dependency-scan:
-    name: 📦 Dependency Security Scan
+    name: Dependency Security Scan
     runs-on: ubuntu-latest
     
     permissions:
@@ -112,41 +112,41 @@ jobs:
       contents: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🔧 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18.x'
           
-      - name: 🔧 Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
           
-      - name: 📦 Install Frontend Dependencies
+      - name: Install Frontend Dependencies
         run: |
           cd vue3-realworld-example-app
           npm install --legacy-peer-deps
           
-      - name: 📦 Install Backend Dependencies
+      - name: Install Backend Dependencies
         run: |
           cd realworld-flask
           pip install -r requirements.txt
           
-      - name: 🔒 Run npm audit
+      - name: Run npm audit
         run: |
           cd vue3-realworld-example-app
           npm audit --audit-level=moderate || true
           
-      - name: 🔒 Run Python safety check
+      - name: Run Python safety check
         run: |
           pip install safety
           cd realworld-flask
           safety check --json || true
           
-      - name: 🔒 Scan Frontend dependencies with Trivy
+      - name: Scan Frontend dependencies with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -155,7 +155,7 @@ jobs:
           output: 'trivy-frontend-deps.sarif'
           severity: 'CRITICAL,HIGH'
           
-      - name: 🔒 Scan Backend dependencies with Trivy
+      - name: Scan Backend dependencies with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -164,7 +164,7 @@ jobs:
           output: 'trivy-backend-deps.sarif'
           severity: 'CRITICAL,HIGH'
           
-      - name: 📤 Upload Frontend dependency scan results
+      - name: Upload Frontend dependency scan results
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         if: always()
@@ -172,7 +172,7 @@ jobs:
           sarif_file: 'trivy-frontend-deps.sarif'
           category: 'frontend-dependencies'
           
-      - name: 📤 Upload Backend dependency scan results
+      - name: Upload Backend dependency scan results
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         if: always()
@@ -181,7 +181,7 @@ jobs:
           category: 'backend-dependencies'
           
   secret-scan:
-    name: 🔐 Secret Scan
+    name: Secret Scan
     runs-on: ubuntu-latest
     
     permissions:
@@ -189,12 +189,12 @@ jobs:
       contents: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history for secret scanning
           
-      - name: 🔒 Run TruffleHog OSS
+      - name: Run TruffleHog OSS
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
@@ -203,21 +203,21 @@ jobs:
           extra_args: --debug --only-verified
           
   security-summary:
-    name: 📊 Security Summary
+    name: Security Summary
     runs-on: ubuntu-latest
     needs: [code-scan, terraform-scan, dependency-scan, secret-scan]
     if: always()
     
     steps:
-      - name: 📊 Generate Security Summary
+      - name: Generate Security Summary
         run: |
-          echo "## 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Scan Date:** $(date)" >> $GITHUB_STEP_SUMMARY
           echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎯 Scan Results:" >> $GITHUB_STEP_SUMMARY
+          echo "### Scan Results:" >> $GITHUB_STEP_SUMMARY
           echo "- **Code Scan:** ${{ needs.code-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Terraform Scan:** ${{ needs.terraform-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Dependency Scan:** ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
@@ -225,12 +225,12 @@ jobs:
           
           if [ "${{ github.event_name }}" = "schedule" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📅 Scheduled Scan" >> $GITHUB_STEP_SUMMARY
+            echo "### Scheduled Scan" >> $GITHUB_STEP_SUMMARY
             echo "This is a scheduled weekly security scan." >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔍 How to View Results:" >> $GITHUB_STEP_SUMMARY
+          echo "### How to View Results:" >> $GITHUB_STEP_SUMMARY
           echo "1. Go to the **Security** tab in this repository" >> $GITHUB_STEP_SUMMARY
           echo "2. Click on **Code scanning alerts** to view findings" >> $GITHUB_STEP_SUMMARY
           echo "3. Review and remediate any critical or high-severity issues" >> $GITHUB_STEP_SUMMARY
@@ -241,6 +241,6 @@ jobs:
              [[ "${{ needs.dependency-scan.result }}" == "failure" ]] || \
              [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ⚠️ Some scans failed" >> $GITHUB_STEP_SUMMARY
+            echo "### Some scans failed" >> $GITHUB_STEP_SUMMARY
             echo "Please review the failed jobs above for more details." >> $GITHUB_STEP_SUMMARY
           fi
