@@ -1,4 +1,4 @@
-name: 🎨 Frontend Deploy
+name: Frontend Deploy
 
 on:
   push:
@@ -23,7 +23,7 @@ env:
 
 jobs:
   build-and-deploy:
-    name: 🏗️ Build & Deploy Vue3 App
+    name: Build & Deploy Vue3 App
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev2' }}
     
@@ -32,21 +32,21 @@ jobs:
       contents: read
       
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: 🔧 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           
-      - name: 🔑 Configure AWS Credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           
-      - name: 📊 Get Infrastructure Info
+      - name: Get Infrastructure Info
         id: infra
         run: |
           ENV="${{ github.event.inputs.environment || 'dev2' }}"
@@ -73,29 +73,29 @@ jobs:
           echo "API_URL=$API_URL" >> $GITHUB_ENV
           echo "APP_URL=$APP_URL" >> $GITHUB_ENV
           
-          echo "📋 Infrastructure Info:"
+          echo " Infrastructure Info:"
           echo "- S3 Bucket: $S3_BUCKET"
           echo "- CloudFront ID: $CLOUDFRONT_ID"
           echo "- API URL: $API_URL"
           echo "- App URL: $APP_URL"
           
-      - name: 📦 Install Dependencies
+      - name: Install Dependencies
         run: |
           cd vue3-realworld-example-app
           
-          echo "📦 Installing npm dependencies..."
+          echo "Installing npm dependencies..."
           npm install --legacy-peer-deps
           
-          echo "✅ Dependencies installed successfully!"
+          echo "Dependencies installed successfully!"
           
-      - name: 🧪 Run Tests
+      - name: Run Tests
         run: |
           cd vue3-realworld-example-app
           
-          echo "🧪 Running Vue3 tests..."
-          npm run test:unit || echo "⚠️  Tests failed, continuing with deployment"
+          echo "Running Vue3 tests..."
+          npm run test:unit || echo "  Tests failed, continuing with deployment"
           
-      - name: 🔨 Build Vue3 App
+      - name: Build Vue3 App
         run: |
           cd vue3-realworld-example-app
           
@@ -124,7 +124,7 @@ jobs:
           VITE_ENABLE_MOCK_API=false
           EOF
           
-          echo "🔨 Building Vue3 application..."
+          echo " Building Vue3 application..."
           echo "- API URL: ${{ env.API_URL }}"
           echo "- Environment: ${{ github.event.inputs.environment || 'dev2' }}"
           echo "- Version: ${{ github.sha }}"
@@ -136,30 +136,30 @@ jobs:
             npm run build
           fi
           
-          echo "✅ Build completed successfully!"
+          echo "Build completed successfully!"
           
-      - name: 📦 Optimize Build
+      - name: Optimize Build
         run: |
           cd vue3-realworld-example-app
           
-          echo "📦 Optimizing build files..."
+          echo " Optimizing build files..."
           
           # Create gzipped versions for better performance
           find dist -type f \( -name "*.js" -o -name "*.css" -o -name "*.html" \) \
             -exec gzip -9 -k {} \;
           
           # Show build stats
-          echo "📊 Build Statistics:"
+          echo " Build Statistics:"
           du -sh dist/
           find dist -name "*.js" -o -name "*.css" | wc -l | xargs echo "Total assets:"
           
           # Verify API configuration in build
-          echo "🔍 Verifying API configuration:"
-          grep -r "${{ env.API_URL }}" dist/ || echo "⚠️ API URL not found in build files"
+          echo " Verifying API configuration:"
+          grep -r "${{ env.API_URL }}" dist/ || echo "API URL not found in build files"
           
-      - name: 📤 Deploy to S3
+      - name: Deploy to S3
         run: |
-          echo "📤 Deploying to S3 bucket: ${{ env.S3_BUCKET }}"
+          echo " Deploying to S3 bucket: ${{ env.S3_BUCKET }}"
           
           # Sync files to S3 with appropriate cache headers
           aws s3 sync vue3-realworld-example-app/dist/ s3://${{ env.S3_BUCKET }}/ \
@@ -174,12 +174,12 @@ jobs:
             --include "*.html" \
             --include "service-worker.js"
           
-          echo "✅ Files uploaded to S3 successfully!"
+          echo " Files uploaded to S3 successfully!"
           
-      - name: 🔄 Invalidate CloudFront Cache
+      - name: Invalidate CloudFront Cache
         run: |
           if [ -n "${{ env.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-            echo "🔄 Invalidating CloudFront distribution: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}"
+            echo " Invalidating CloudFront distribution: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}"
             
             # Create invalidation
             INVALIDATION_ID=$(aws cloudfront create-invalidation \
@@ -188,22 +188,22 @@ jobs:
               --query 'Invalidation.Id' \
               --output text)
             
-            echo "⏳ Invalidation created: $INVALIDATION_ID"
+            echo " Invalidation created: $INVALIDATION_ID"
             echo "Waiting for invalidation to complete..."
             
             # Wait for invalidation to complete (with timeout)
             timeout 600 aws cloudfront wait invalidation-completed \
               --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
-              --id $INVALIDATION_ID || echo "⚠️ Invalidation timeout, but continuing..."
+              --id $INVALIDATION_ID || echo " Invalidation timeout, but continuing..."
             
-            echo "✅ CloudFront cache invalidated successfully!"
+            echo " CloudFront cache invalidated successfully!"
           else
-            echo "⚠️ CloudFront distribution ID not found, skipping cache invalidation"
+            echo " CloudFront distribution ID not found, skipping cache invalidation"
           fi
           
-      - name: 🔍 Verify Deployment
+      - name: Verify Deployment
         run: |
-          echo "🔍 Verifying deployment..."
+          echo " Verifying deployment..."
           echo "Frontend URL: ${{ env.APP_URL }}"
           
           # Wait for CloudFront to update
@@ -212,34 +212,34 @@ jobs:
           # Test frontend accessibility
           for i in {1..5}; do
             if curl -f -s "${{ env.APP_URL }}" > /dev/null; then
-              echo "✅ Frontend is accessible!"
+              echo " Frontend is accessible!"
               
               # Test if the page contains our app content
               if curl -s "${{ env.APP_URL }}" | grep -q "conduit\|RealWorld"; then
-                echo "✅ Frontend content verified!"
+                echo " Frontend content verified!"
               else
-                echo "⚠️ Frontend accessible but content may not be correct"
+                echo " Frontend accessible but content may not be correct"
               fi
               break
             else
-              echo "⏳ Attempt $i failed, retrying in 15s..."
+              echo " Attempt $i failed, retrying in 15s..."
               sleep 15
             fi
           done
           
-      - name: ✅ Deployment Summary
+      - name: Deployment Summary
         run: |
-          echo "## 🎨 Frontend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "## Frontend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ github.event.inputs.environment || 'dev2' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Frontend URL:** ${{ env.APP_URL }}" >> $GITHUB_STEP_SUMMARY
           echo "**API URL:** ${{ env.API_URL }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Deployment Details:" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **S3 Bucket:** ${{ env.S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
           echo "- **CloudFront Distribution:** ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 Quick Links:" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Links:" >> $GITHUB_STEP_SUMMARY
           echo "- [Frontend App](${{ env.APP_URL }})" >> $GITHUB_STEP_SUMMARY
           echo "- [API Health Check](${{ env.API_URL }}/health)" >> $GITHUB_STEP_SUMMARY
